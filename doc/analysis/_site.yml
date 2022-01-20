@@ -1,0 +1,43 @@
+name: MAESTRO
+output_dir: ../docs
+navbar:
+  title: MAESTRO 1.5.1
+  left:
+  - text: scRNA-seq
+    menu:
+    - text: 10X PBMC 1k
+      href: scrna.html
+    - text: 10X PBMC 1k Custom Analysis
+      href: scrna_stepbystep.html
+    - text: 10X snRNA-seq
+      href: snrna.html
+  - text: scATAC-seq
+    menu:
+    - text: 10X PBMC 500
+      href: scatac.html
+    - text: 10X PBMC 500 Custom Analysis
+      href: scatac_stepbystep.html
+    - text: sci-ATAC-seq
+      href: sci_atac.html
+  - text: multi-sample scRNA-seq
+    menu:
+    - text: 10X multi-sample
+      href: multi-scrna.html
+  - text: multi-sample scATAC-seq
+    menu:
+    - text: time-dependent multi-sample
+      href: multi-scatac.html
+    - text: Custom Analysis
+      href: multi-scatac_stepbystep.html
+  - text: License
+    href: license.html
+  right:
+  - icon: fa-github
+    text: Source code
+    href: https://github.com/baigal628/MultiSample_scATACseq
+output:
+  workflowr::wflow_html:
+    toc: yes
+    toc_float: yes
+    theme: flatly
+    highlight: textmate

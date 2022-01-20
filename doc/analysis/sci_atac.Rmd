@@ -1,0 +1,62 @@
+---
+title: "sci-ATAC-seq"
+author: "baigal628"
+date: "2021-06-15"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+In this example, we will be analyzing a sci-ATAC-seq dataset from public GEO data with accession SRR1947692 .
+
+### Step 0. Download the data and prepare the environment
+
+Please download the raw data from GEO.
+
+```{bash, eval=FALSE}
+$ mkdir sci-ATAC
+$ cd sci-ATAC
+$ fastq-dump --split-files --origfmt --defline-seq '@rd.$si:$sg:$sn' SRR1947692
+```
+
+Before running MAESTRO, users need to activate the MAESTRO environment.
+
+```{bash, eval=FALSE}
+$ conda activate MAESTRO
+```
+
+
+### Step 1. Configure the MAESTRO workflow
+Initialize the MAESTRO scATAC-seq workflow using `MAESTRO scATAC-init` command. This will install a Snakefile and a config file in this directory. Here we take the 10X PBMC data as an example. Considering MAESTRO provides built-in immune cell markers, it's recommended to choose the `RP-based` cell-type annotation strategy. If the data is not immune-related, users can choose to provide their own marker gene list, or choose to annotate cell types through the `peak-based` method (see the following argument description for more details), or they can directly skip the annotation step by not setting `--annotation`.
+
+```{bash, eval=FALSE}
+$ MAESTRO scatac-init --input_path sci-ATAC \
+--gzip --species GRCh38 --platform sci-ATAC-seq --format fastq --mapping minimap2 \
+--deduplication cell-level \
+--giggleannotation annotations/giggle.all \
+--fasta references/Refdata_scATAC_MAESTRO_GRCh38_1.1.0/GRCh38_genome.fa \
+--cores 16 --directory sci-scATAC-seq \
+--annotation --method RP-based --signature human.immune.CIBERSORT \
+--peak_cutoff 5 --count_cutoff 10 --frip_cutoff 0.05 --cell_cutoff 5
+
+$ cd sci-scATAC-seq/
+
+$ MAESTRO samples-init --assay_type scatac --platform sci-ATAC-seq --data_type fastq --data_dir sci-ATAC/
+```
+
+### Step 2. Run MAESTRO
+Before running the workflow, please check the `config.yaml` and see if it is configured correctly. Once configured, users can use snakemake to run the workflow.
+
+```{bash, eval=FALSE}
+$ snakemake -np
+$ nohup snakemake -j 16 >run.out &
+```
+
+### Step3. Final Outputs
+
+```{bash, eval=FALSE}
+$ ls Result
+Analysis  Benchmark  Log  Mapping  QC  Report
+```

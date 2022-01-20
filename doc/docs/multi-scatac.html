@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Gali Bai" />
+
+
+<title>multi-sample scATAC-seq</title>
+
+<script src="site_libs/header-attrs-2.9/header-attrs.js"></script>
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">MAESTRO 1.5.1</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    scRNA-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="scrna.html">10X PBMC 1k</a>
+    </li>
+    <li>
+      <a href="scrna_stepbystep.html">10X PBMC 1k Custom Analysis</a>
+    </li>
+    <li>
+      <a href="snrna.html">10X snRNA-seq</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    scATAC-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="scatac.html">10X PBMC 500</a>
+    </li>
+    <li>
+      <a href="scatac_stepbystep.html">10X PBMC 500 Custom Analysis</a>
+    </li>
+    <li>
+      <a href="sci_atac.html">sci-ATAC-seq</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    multi-sample scRNA-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="multi-scrna.html">10X multi-sample</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    multi-sample scATAC-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="multi-scatac.html">time-dependent multi-sample</a>
+    </li>
+    <li>
+      <a href="multi-scatac_stepbystep.html">Custom Analysis</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a>
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="https://github.com/liulab-dfci/MAESTRO">Source code</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">multi-sample scATAC-seq</h1>
+<h4 class="author">Gali Bai</h4>
+<h4 class="date">6/6/2021</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-07-27
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>MAESTRO_documentation/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20201223code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20201223)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20201223code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20201223)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombaigal628MultiSamplescATACseqtree4a7b06feb4cf21a05554efbc3bf8fc9c17b37683targetblank4a7b06fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/baigal628/MultiSample_scATACseq/tree/4a7b06feb4cf21a05554efbc3bf8fc9c17b37683" target="_blank">4a7b06f</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombaigal628MultiSamplescATACseqtree4a7b06feb4cf21a05554efbc3bf8fc9c17b37683targetblank4a7b06fa" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/baigal628/MultiSample_scATACseq/tree/4a7b06feb4cf21a05554efbc3bf8fc9c17b37683" target="_blank">4a7b06f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .RData
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.DS_Store
+    Ignored:    code/.DS_Store
+    Ignored:    data/.DS_Store
+    Ignored:    data/multi-scatac/.DS_Store
+    Ignored:    data/multi-scrna/
+
+Untracked files:
+    Untracked:  .RDataTmp
+    Untracked:  code/snRNA_genelength.R
+    Untracked:  code/snRNA_genelength_TPM.R
+    Untracked:  data/allen/
+    Untracked:  data/multi-scatac/bed/
+    Untracked:  data/multi-scatac/bigwig/GDF7_bed_added.png
+    Untracked:  output/snRNA_TPM_VS_genelength.png
+    Untracked:  output/snRNA_genelengthVSLognormUMI.png
+    Untracked:  output/snRNA_genelengthVSUMI.png
+
+Unstaged changes:
+    Deleted:    MultiSample_scATACseq.Rproj
+    Deleted:    atac_pbmc_500_nextgem.GIGGLE/0.peaks.bed
+    Deleted:    atac_pbmc_500_nextgem.GIGGLE/0.peaks.bed.gz
+    Deleted:    atac_pbmc_500_nextgem.GIGGLE/0.peaks.bed.result.xls
+    Modified:   code/Basic_Operations.R
+    Modified:   pbmc_1k_v3_8k_res.rds
+    Modified:   pbmc_1k_v3_Monocyte_filtered.pdf
+    Modified:   pbmc_1k_v3_Monocyte_top.pdf
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>MAESTRO multi-sample scATAC-seq function is the extension of the scATAC-seq pipeline. By specifying different merging points, users can choose either to call bulk peaks or to call peaks by each sample individually. At the end of each workflow, users will obtain both individual peak/gene matrix and merged peak/gene matrix. Each merging point has been shown in the below flow chart. The downstream analysis will then be conducted based on the output matrix. After collecting clustering information, the multi-sample pipeline will also split the fragment file by samples and clusters. This step was developed to facilitate the comparison between samples within each cluster.</p>
+<p><img src="assets/flowchart.png" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flowchart">
+Past versions of flowchart.png
+</button>
+</p>
+<div id="fig-flowchart" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/d88199f8195c2478c620c703d41e3512dc1ff414/docs/assets/flowchart.png" target="_blank">d88199f</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2020-12-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="tutorial-pbmc-scatac-seq-in-time-dependent-sampling-studies" class="section level2">
+<h2>Tutorial: PBMC scATAC-seq in time-Dependent Sampling Studies</h2>
+<p><a href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02032-0">Paper</a><br />
+<a href="https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA545828&amp;o=assay_type_s%3Aa">Data Source</a></p>
+<div id="step0.-data-preparation" class="section level3">
+<h3>Step0. Data Preparation</h3>
+<p><strong>Create a list of accessions</strong></p>
+<pre class="bash"><code>$ touch SraAccList.txt
+$ nano SraAccList.txt</code></pre>
+<p><strong>Copy the following accession numbers in SraAccList.txt:</strong></p>
+<pre class="bash"><code>$ mkdir data
+$ cd data
+
+$ touch SraAccList.txt
+$ nano SraAccList.txt
+
+#copy the following accession numbers
+SRR11614703
+SRR11614704
+SRR11614705
+SRR11614706
+SRR11614707
+SRR11614708</code></pre>
+<pre class="bash"><code>#Install sratoolkit through conda
+$ conda install -c bioconda sra-tools
+
+#Split .sra to .fastq.gz
+$ cat SraAccList.txt | while read i
+  do
+    time fastq-dump --gzip -split-files ${i}
+    echo &quot;** ${i}.sra to fastq done **&quot;
+  done
+
+#Rename to 10X format
+$ cat SraAccList.txt | while read i
+  do
+    mv ${i}_1*.gz ${i}_S1_L001_R1_001.fastq.gz
+    mv ${i}_2*.gz ${i}_S1_L001_R3_001.fastq.gz
+    mv ${i}_3*.gz ${i}_S1_L001_R2_001.fastq.gz
+  done
+
+#I renamed each file based on sample information (Optional)
+$ mv SRR11614703_S1_L001_R1_001.fastq.gz CLL0_S1_L001_R1_001.fastq.gz</code></pre>
+</div>
+<div id="step-1.-configure-the-maestro-workflow" class="section level3">
+<h3>Step 1. Configure the MAESTRO workflow</h3>
+<p>Initialize the MAESTRO scATAC-seq workflow using <code>MAESTRO scATAC-init</code> command. This will install a Snakefile and a config file in this directory. Here we take the 10X PBMC and CLL data as an example. Considering MAESTRO provides built-in immune cell markers, it’s recommended to choose the <code>RP-based</code> cell-type annotation strategy. If the data is not immune-related, users can choose to provide their own marker gene list, or choose to annotate cell types through the <code>peak-based</code> method (see the following argument description for more details), or they can directly skip the annotation step by not setting <code>--annotation</code>.</p>
+<pre class="bash"><code>$ MAESTRO scatac-init --batch --bulk_peaks --downsample \
+--target_reads 5000000 --input_path /single-cell/MAESTRO/test/tutorial/data/time_data \
+--gzip --platform 10x-genomics --format fastq --species GRCh38 \
+--deduplication cell-level --mapping chromap \
+--giggleannotation /single-cell/annotations/giggle.all/ \
+--fasta /single-cell/references/Refdata_scATAC_MAESTRO_GRCh38_1.1.0/GRCh38_genome.fa \
+--index /single-cell/references/chromap/GRCh38_chromap.index \
+--whitelist /single-cell/references/whitelist/737K-cratac-v1.txt \
+--cores 16 --directory multi-scatac-chromap \
+--annotation --method RP-based --signature human.immune.CIBERSORT \
+--clusterpeak --shortpeak \
+--rpmodel Enhanced \
+--peak_cutoff 100 --count_cutoff 1000 --frip_cutoff 0.2 --cell_cutoff 500</code></pre>
+<p>To get a full description of command-line options, please use the command</p>
+<pre class="bash"><code>$ MAESTRO scatac-init -h</code></pre>
+<div id="here-we-list-all-the-arguments-and-their-description." class="section level4">
+<h4>Here we list all the arguments and their description.</h4>
+<p><strong>multi-sample processing parameters:</strong></p>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--batch</code></td>
+<td>If set as true, multi-sample pipeline will be initiated. Users can either choose to go through consensus-peaks path or bulk-peaks path (illustrated in workflow above), which are mutually exclusive. A count matrix for each sample will be produced based on the merged peak set.</td>
+</tr>
+<tr class="even">
+<td><code>--consensus_peaks</code></td>
+<td>If true, –batch needs to be also set as true. Users can define whether to merge consensus peaks from each sample. In this way, MAESTRO will call peaks on each sample individually first and merge consensus peaks from all samples. Users should also set number of cutoff_samples to define the consensus (i.e. peaks called in &gt;= cutoff_samples).</td>
+</tr>
+<tr class="odd">
+<td><code>--cutoff_samples</code></td>
+<td>Minimum number of samples to present consensus peaks. The peaks present in at least cutoff_samples will be kept.</td>
+</tr>
+<tr class="even">
+<td><code>--bulk_peaks</code></td>
+<td>For multi-samples from the same experiment, if set as true, peaks will be called after merging all bam file. Bulk_peaks and consensus_peaks are mutually exclusive.</td>
+</tr>
+<tr class="odd">
+<td><code>--downsample</code></td>
+<td>{True,False} For deeply sequenced samples, bam files can be downsampled to a certain number of reads (target_reads) to get peak set. Effective only when bulk_peaks is true.</td>
+</tr>
+<tr class="even">
+<td><code>--target_reads</code></td>
+<td>Number of reads to be kept in downsampling. If the sample has fewer than the target_reads, the original number of reads will be kept. Effective only when down_sample is true.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Input files arguments:</strong></p>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--input_path</code></td>
+<td>Path to the input fastq files.</td>
+</tr>
+<tr class="even">
+<td><code>--gzip</code></td>
+<td>Set as True if the input files are gzipped.</td>
+</tr>
+<tr class="odd">
+<td><code>--species</code></td>
+<td>{GRCh38,GRCm38} Specify the genome assembly (GRCh38 for human and GRCm38 for mouse). DEFAULT: GRCh38.</td>
+</tr>
+<tr class="even">
+<td><code>--platform</code></td>
+<td>{10x-genomics,sci-ATAC-seq} Platform of single cell ATAC-seq. DEFAULT: 10x-genomics.</td>
+</tr>
+<tr class="odd">
+<td><code>--format</code></td>
+<td>{fastq,bam,fragments} The format of input files. Users can start with sequencing fastq files, bam files with CB tag or fragments.tsv.gz file generated by CellRanger ATAC. If the platform is 10x-genomics, users can start with sequencing fastq files, bam files with CB tag or fragments.tsv.gz file generated by CellRanger ATAC. If the platform is sci-ATAC-seq, users can start with sequencing fastq files, bam files with CB tag.</td>
+</tr>
+<tr class="even">
+<td><code>--mapping</code></td>
+<td>{chromap,minimap2} Choose the aligment tool for scATAC-seq from either chromap or minimap2. DEFAULT: chromap.</td>
+</tr>
+<tr class="odd">
+<td><code>--deduplication</code></td>
+<td>{cell-level,bulk-level} deduplication level: cell-level or bulk-level.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reference genome arguments:</strong></p>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--giggleannotation</code></td>
+<td>Path of the giggle annotation file required for regulator identification. Please download the annotation file from <a href="http://cistrome.org/~galib/MAESTRO/references/giggle.all.tar.gz">here</a> and decompress it..</td>
+</tr>
+<tr class="even">
+<td><code>--fasta</code></td>
+<td>Genome fasta file for minimap2. Users can just download the fasta file for <a href="http://cistrome.org/~galib/MAESTRO/references/scATAC/Refdata_scATAC_MAESTRO_GRCh38_1.1.0.tar.gz">human</a> and <a href="http://cistrome.org/~galib/MAESTRO/references/scATAC/Refdata_scATAC_MAESTRO_GRCm38_1.1.0.tar.gz">mouse</a> from CistromDB and decompress them. For example, <code>--fasta Refdata_scATAC_MAESTR O_GRCh38_1.1.0/GRCh38_genome.fa</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>--index</code></td>
+<td>Path of the reference index file for chromap. Users need to build the index file for the reference using command $ chromap -i -r ref.fa -o index.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Barcode library arguments, only for the platform of ‘sci-ATAC-seq’:</strong></p>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--whitelist</code></td>
+<td>If the platform is ‘sci-ATAC-seq’ or ‘10x-genomics’, please specify the barcode library (whitelist) so that the pipeline can correct cell barcodes with 1 base mismatched. Otherwise, the pipeline will automatically output the barcodes with enough read count (&gt;1000). The 10X Chromium whitelist file can be found inside the CellRanger-ATAC distribution. For example, in CellRanger-ATAC 1.1.0, the whitelist is ‘cellranger-atac-1.1.0/cellranger-atac-cs/1.1.0/lib/python/barcodes/737K-cratac-v1.txt’.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output arguments:</strong></p>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--cores</code></td>
+<td>The number of cores to use. DEFAULT: 8.</td>
+</tr>
+<tr class="even">
+<td><code>--directory</code></td>
+<td>Path to the directory where the workflow shall be initialized and results shall be stored. DEFAULT: MAESTRO.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cell-type annotation arguments:</strong></p>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--annotation</code></td>
+<td>Whether or not to perform cell-type annotation. By default (not set), MAESTRO will skip the step of cell-type annotation. If set, please specify the method of cell-type annotation through <code>--method</code>.</td>
+</tr>
+<tr class="even">
+<td><code>--method</code></td>
+<td>{RP-based,peak-based,both} Method to annotate cell types. MAESTRO provides two strategies to annotate cell types for scATAC-seq data. Users can choose from ‘RP-based’ and ‘peak-based’, or choose to run both of them. One is based on gene regulatory potential predicted by RP model. Another is based on the bulk chromatin accessibility data from Cistrome database. If ‘RP-based’ is set, MAESTRO performs the cell-type annotation using the gene regulatory potential to represent gene expression, and the logFC of gene regulatory potential between one cluster and all the other cells is used to calculate the gene signature scores. If ‘peak-based’ is set, MAESTRO utilizes GIGGLE to evaluate the enrichment of bulk chromatin accessibility peaks on cluster-specific peaks from scATAC-seq data, and then transfers the Cistrome cluster identity from the most enriched bulk chromatin accessibility data as the cell-type annotation for the scATAC-seq cluster. See the MAESTRO paper for more details. DEFAULT: RP-based.</td>
+</tr>
+<tr class="odd">
+<td><code>--signature</code></td>
+<td>Cell signature file used to annotate cell types (required when method is set as ‘RP-based’). MAESTRO provides several sets of built-in cell signatures. Users can choose from [‘human.immune.CIBERSORT’, ‘mouse.brain.ALLEN’, ‘mouse.all.facs.TabulaMuris’, ‘mouse.all.droplet.TabulaMuris’]. Custom cell signatures are also supported. In this situation, users need to provide the file location of cell signatures, and the signature file is tab-seperated without header. The first column is cell type, and the second column is signature gene. DEFAULT: human.immune.CIBERSORT.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Customized peak arguments:</strong></p>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--custompeak</code></td>
+<td>Whether or not to provide custom peaks. If set, users need to provide the file location of peak file through <code>--custompeak-file</code> and then MAESTRO will merge the custom peak file and the peak file called from all fragments using MACS2. By default (not set), the pipeline will use the peaks called using MACS2.</td>
+</tr>
+<tr class="even">
+<td><code>--custompeak-file</code></td>
+<td>If <code>--custompeak</code> is set, please provide the file location of custom peak file. The peak file is BED formatted with tab-separated. The first column is the chromosome, the second is chromStart, and the third is chromEnd.</td>
+</tr>
+<tr class="odd">
+<td><code>--shortpeak</code></td>
+<td>Whether or not to call peaks from short fragments (shorter than 150bp). If set, MAESTRO will merge the peaks called from all fragments and those called from short fragments, and then use the merged peak file for further analysis. If not (by default), the pipeline will only use peaks called from all fragments.</td>
+</tr>
+<tr class="even">
+<td><code>--clusterpeak</code></td>
+<td>Whether or not to call peaks by cluster. If set, MAESTRO will split the bam file according to the clustering result, and then call peaks for each cluster. By default (not set), MAESTRO will skip this step.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Gene score arguments:</strong></p>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--rpmodel</code></td>
+<td>{Simple,Enhanced} The RP model to use to calaculate gene score. For each gene, simple model sums over the impact of all regulatory elements within the up/dowm-stream of TSS. On the basis of simple model, enhanced model gives the regulatory elements within the exon region a higher weight, and also excludes the regulatory elements overlapped with another gene (the promoter and exon of a nearby gene). See the MAESTRO paper for more details. DEFAULT: Enhanced.</td>
+</tr>
+<tr class="even">
+<td><code>--genedistance</code></td>
+<td>Gene score decay distance, could be optional from 1kb (promoter-based regulation) to 10kb (enhancer-based regulation). DEFAULT: 10000.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Quality control arguments:</strong></p>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--peak-cutoff</code></td>
+<td>Minimum number of peaks included in each cell. DEFAULT: 100.</td>
+</tr>
+<tr class="even">
+<td><code>--count-cutoff</code></td>
+<td>Cutoff for the number of count in each cell. DEFAULT: 1000.</td>
+</tr>
+<tr class="odd">
+<td><code>--frip-cutoff</code></td>
+<td>Cutoff for fraction of reads in promoter in each cell. DEFAULT: 0.2.</td>
+</tr>
+<tr class="even">
+<td><code>--cell-cutoff</code></td>
+<td>Minimum number of cells covered by each peak. DEFAULT: 10.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="step-2.-configure-samples.json-file" class="section level3">
+<h3>Step 2. Configure samples.json file</h3>
+<p>In the project directory, we will next run <code>MAESTRO samples-init</code> subcommand to configure samples.json file. The purpose of this step is let MAESTRO read the right format and path of input data.</p>
+<pre class="bash"><code>$ cd multi-scatac-chromap/
+
+$ MAESTRO samples-init --assay_type scatac --platform 10x-genomics --data_type fastq --data_dir /single-cell/MAESTRO/test/tutorial/data/time_data</code></pre>
+<p>To get a full description of command-line options, please use the command</p>
+<pre class="bash"><code>MAESTRO samples-init -h</code></pre>
+<p><strong>Input files arguments:</strong></p>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--assay_type</code></td>
+<td>{scrna,scatac} choose the type of assays.</td>
+</tr>
+<tr class="even">
+<td><code>--platform</code></td>
+<td>{10x-genomics,sci-ATAC-seq,microfluidic} choose the type of sequencing platform.</td>
+</tr>
+<tr class="odd">
+<td><code>--data_type</code></td>
+<td>{fastq,fragment,bam} choose the type of input data. When using fastq format as input, MAESTRO can only recognize the 10X-like naming: <code>[Sample Name]_S1_L00[Lane Number]_[Read Type]_001.fastq.gz</code>.</td>
+</tr>
+<tr class="even">
+<td><code>--data_dir</code></td>
+<td>the full path to the input file folder.</td>
+</tr>
+</tbody>
+</table>
+<p>Once configured, you will find a samples.json file in the current project directory:</p>
+<pre class="bash"><code>$ cat samples.json
+
+{
+    &quot;CLL0&quot;: {
+        &quot;R1&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/CLL0_S1_L001_R1_001.fastq.gz&quot;
+        ],
+        &quot;R2&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/CLL0_S1_L001_R2_001.fastq.gz&quot;
+        ],
+        &quot;R3&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/CLL0_S1_L001_R3_001.fastq.gz&quot;
+        ]
+    },
+    &quot;CLL24&quot;: {
+        &quot;R1&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/CLL24_S1_L001_R1_001.fastq.gz&quot;
+        ],
+        &quot;R2&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/CLL24_S1_L001_R2_001.fastq.gz&quot;
+        ],
+        &quot;R3&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/CLL24_S1_L001_R3_001.fastq.gz&quot;
+        ]
+    },
+    &quot;CLL8&quot;: {
+        &quot;R1&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/CLL8_S1_L001_R1_001.fastq.gz&quot;
+        ],
+        &quot;R2&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/CLL8_S1_L001_R2_001.fastq.gz&quot;
+        ],
+        &quot;R3&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/CLL8_S1_L001_R3_001.fastq.gz&quot;
+        ]
+    },
+    &quot;PBMC0&quot;: {
+        &quot;R1&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/PBMC0_S1_L001_R1_001.fastq.gz&quot;
+        ],
+        &quot;R2&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/PBMC0_S1_L001_R2_001.fastq.gz&quot;
+        ],
+        &quot;R3&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/PBMC0_S1_L001_R3_001.fastq.gz&quot;
+        ]
+    },
+    &quot;PBMC24&quot;: {
+        &quot;R1&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/PBMC24_S1_L001_R1_001.fastq.gz&quot;
+        ],
+        &quot;R2&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/PBMC24_S1_L001_R2_001.fastq.gz&quot;
+        ],
+        &quot;R3&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/PBMC24_S1_L001_R3_001.fastq.gz&quot;
+        ]
+    },
+    &quot;PBMC8&quot;: {
+        &quot;R1&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/PBMC8_S1_L001_R1_001.fastq.gz&quot;
+        ],
+        &quot;R2&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/PBMC8_S1_L001_R2_001.fastq.gz&quot;
+        ],
+        &quot;R3&quot;: [
+            &quot;/MAESTRO/test/tutorial/data/time_data/PBMC8_S1_L001_R3_001.fastq.gz&quot;
+        ]
+    }
+}</code></pre>
+</div>
+<div id="step-3.-run-snakemake-pipeline" class="section level3">
+<h3>Step 3. Run snakemake pipeline</h3>
+<p>Before running the workflow, please check the <code>config.yaml</code> and see if it is configured correctly. Once configured, users can use snakemake to run the workflow.</p>
+<pre class="bash"><code>$ snakemake -np
+
+$ nohup snakemake --cores 32 &gt; multi-scatac-chromap &amp;
+##Instead of using nohup, submitting $ snakemake -j 16 by slurm is highly recommended.</code></pre>
+</div>
+<div id="step4.-final-outputs" class="section level3">
+<h3>Step4. Final Outputs</h3>
+<pre class="bash"><code>$ ls Result
+Analysis  Benchmark  Log  Mapping  QC  Report
+
+$ ls Result/Analysis
+Batch  CLL0  CLL24  CLL8  Cluster  PBMC0  PBMC24  PBMC8</code></pre>
+<ul>
+<li><strong>Analysis/:</strong> The Analysis directory contains a Seurat R object, as well as clustering result, cell type annotation result and driver transcription factor identification result. Specificly for the multi-sample scATAC-seq, we process a pseudo-bulk peak calling within each cluster and output the fragment files, narrow peak files, and bigwig files.
+<ul>
+<li>Batch/: All samples merged Results.</li>
+<li>Cluster/: Fragment and bigwig files for each sample within each cluster.</li>
+</ul></li>
+<li><strong>Benchmark/:</strong> The Benchmark directory stores benchmark files for all rules in Snakefile, each of which contains a tab-separated table of run times and memory usage in MiB.</li>
+<li><strong>Log/:</strong> The Log directory contains the log files generated in the pipeline analysis.</li>
+<li><strong>Mapping/:</strong> The Mapping directory contains all the mapping results generated by chromap or minimap2.</li>
+<li><strong>QC/:</strong> The QC directory contains quality control analysis results of scATAC-seq data, including the barcode filtering table outprefix_scATAC_validcells.txt, filtered count matrix outprefix_filtered_peak_count.h5 and other QC results. The filtered count matrix is generated according to singlecell.txt and the parameters like –count-cutoff and –frip-cutoff that users provide.</li>
+<li><strong>Report/:</strong> The html file in Report directory summarizes all the results in an HTML based document.</li>
+</ul>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.0 (2021-05-18)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Big Sur 10.16
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] workflowr_1.6.2
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.6        whisker_0.4       knitr_1.33        magrittr_2.0.1   
+ [5] R6_2.5.0          rlang_0.4.11      fansi_0.5.0       highr_0.9        
+ [9] stringr_1.4.0     tools_4.1.0       xfun_0.24         utf8_1.2.1       
+[13] git2r_0.28.0      jquerylib_0.1.4   htmltools_0.5.1.1 ellipsis_0.3.2   
+[17] rprojroot_2.0.2   yaml_2.2.1        digest_0.6.27     tibble_3.1.2     
+[21] lifecycle_1.0.0   crayon_1.4.1      later_1.2.0       sass_0.4.0       
+[25] vctrs_0.3.8       promises_1.2.0.1  fs_1.5.0          glue_1.4.2       
+[29] evaluate_0.14     rmarkdown_2.9     stringi_1.6.2     bslib_0.2.5.1    
+[33] compiler_4.1.0    pillar_1.6.1      jsonlite_1.7.2    httpuv_1.6.1     
+[37] pkgconfig_2.0.3  </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

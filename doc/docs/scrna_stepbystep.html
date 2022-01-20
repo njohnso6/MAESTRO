@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Gali Bai" />
+
+<meta name="date" content="2021-06-07" />
+
+<title>scRNA-seq custom analysis</title>
+
+<script src="site_libs/header-attrs-2.9/header-attrs.js"></script>
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">MAESTRO 1.5.1</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    scRNA-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="scrna.html">10X PBMC 1k</a>
+    </li>
+    <li>
+      <a href="scrna_stepbystep.html">10X PBMC 1k Custom Analysis</a>
+    </li>
+    <li>
+      <a href="snrna.html">10X snRNA-seq</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    scATAC-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="scatac.html">10X PBMC 500</a>
+    </li>
+    <li>
+      <a href="scatac_stepbystep.html">10X PBMC 500 Custom Analysis</a>
+    </li>
+    <li>
+      <a href="sci_atac.html">sci-ATAC-seq</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    multi-sample scRNA-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="multi-scrna.html">10X multi-sample</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    multi-sample scATAC-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="multi-scatac.html">time-dependent multi-sample</a>
+    </li>
+    <li>
+      <a href="multi-scatac_stepbystep.html">Custom Analysis</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a>
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="https://github.com/liulab-dfci/MAESTRO">Source code</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">scRNA-seq custom analysis</h1>
+<h4 class="author">Gali Bai</h4>
+<h4 class="date">2021-06-07</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-07-27
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>MAESTRO_documentation/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20201223code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20201223)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20201223code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20201223)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombaigal628MultiSamplescATACseqtree4a7b06feb4cf21a05554efbc3bf8fc9c17b37683targetblank4a7b06fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/baigal628/MultiSample_scATACseq/tree/4a7b06feb4cf21a05554efbc3bf8fc9c17b37683" target="_blank">4a7b06f</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombaigal628MultiSamplescATACseqtree4a7b06feb4cf21a05554efbc3bf8fc9c17b37683targetblank4a7b06fa" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/baigal628/MultiSample_scATACseq/tree/4a7b06feb4cf21a05554efbc3bf8fc9c17b37683" target="_blank">4a7b06f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .RData
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.DS_Store
+    Ignored:    code/.DS_Store
+    Ignored:    data/.DS_Store
+    Ignored:    data/multi-scatac/.DS_Store
+    Ignored:    data/multi-scrna/
+
+Untracked files:
+    Untracked:  .RDataTmp
+    Untracked:  code/snRNA_genelength.R
+    Untracked:  code/snRNA_genelength_TPM.R
+    Untracked:  data/allen/
+    Untracked:  data/multi-scatac/bed/
+    Untracked:  data/multi-scatac/bigwig/GDF7_bed_added.png
+    Untracked:  output/snRNA_TPM_VS_genelength.png
+    Untracked:  output/snRNA_genelengthVSLognormUMI.png
+    Untracked:  output/snRNA_genelengthVSUMI.png
+
+Unstaged changes:
+    Deleted:    MultiSample_scATACseq.Rproj
+    Deleted:    atac_pbmc_500_nextgem.GIGGLE/0.peaks.bed
+    Deleted:    atac_pbmc_500_nextgem.GIGGLE/0.peaks.bed.gz
+    Deleted:    atac_pbmc_500_nextgem.GIGGLE/0.peaks.bed.result.xls
+    Modified:   code/Basic_Operations.R
+    Modified:   pbmc_1k_v3_8k_res.rds
+    Modified:   pbmc_1k_v3_Monocyte_filtered.pdf
+    Modified:   pbmc_1k_v3_Monocyte_top.pdf
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="perform-custom-analysis-from-the-pipeline-output" class="section level2">
+<h2>Perform custom analysis from the pipeline output</h2>
+<p>Although MAESTRO will generate all the analysis results through the snakemake-based workflow, in most cases, users might focus on specific clusters or sub-clusters or want to tune some of the parameters to improve the results. Then users can utilize the stand-alone MAESTRO R package, which has been installed in the MAESTRO conda environment, to perform custom analysis from the processed dataset (gene by cell count matrix). We will show you how to run through the downstream analysis using the R package step by step.</p>
+<div id="step-0.-read-data" class="section level3">
+<h3>Step 0. Read data</h3>
+<p>First users need to read the gene expression count matrix generated by MAESTRO pipeline into the R environment. To support the processing of large datasets, in MAESTRO we use <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices">HDF5 format</a> for all the expression, atac-seq peak count and RP tables.</p>
+<pre class="r"><code>library(MAESTRO)</code></pre>
+<pre><code>Registered S3 method overwritten by &#39;cli&#39;:
+  method     from         
+  print.boxx spatstat.geom</code></pre>
+<pre class="r"><code>library(Seurat)</code></pre>
+<pre><code>Attaching SeuratObject</code></pre>
+<pre class="r"><code>#Here, user need to get the .h5 matrix under path scRNA/pbmc_1k_v3/Result/QC/pbmc_1k_v3_filtered_gene_count.h5
+pbmc.gene &lt;- Read10X_h5(&quot;./data/scrna/pbmc_1k_v3_filtered_gene_count.h5&quot;)</code></pre>
+<pre><code>Warning in sparseMatrix(i = indices[] + 1, p = indptr[], x = as.numeric(x =
+counts[]), : &#39;giveCsparse&#39; has been deprecated; setting &#39;repr = &quot;T&quot;&#39; for you</code></pre>
+<p>We also support the processed dataset from 10x Cell Ranger pipeline or STARsolo. Users can load the gene matrix into R through <code>Read10X</code> function in Seurat package</p>
+<pre class="r"><code>pbmc.gene &lt;- Read10X(&#39;Result/STAR/pbmc_1k_v3Solo.out/Gene/filtered&#39;)</code></pre>
+</div>
+<div id="step-1.-perform-clustering-and-differential-gene-analysis" class="section level3">
+<h3>Step 1. Perform clustering and differential gene analysis</h3>
+<p>We next create a Seurat object using the gene expression matrix and perform the clustering analysis as well as differential gene analysis for different clusters. <code>RNARunSeurat()</code> function in MAESTRO integrates multiple functions of Seurat and perform the routine analysis as follows.</p>
+<ol style="list-style-type: decimal">
+<li><strong>Single-cell level quality control</strong></li>
+</ol>
+<ul>
+<li><strong>Cell and gene coverage:</strong> Cells with less than 200 genes expressed, and genes expressed in less than 10 cells will be removed from the analysis.</li>
+<li><strong>Mitochondrial gene and ERCC:</strong> If <code>mito = TRUE</code> and <code>mito.cutoff = 20</code> is set, we will also filter the cells with more than 20% mitochondrial reads or more than 5% ERCC spike-ins. Mitochondrial genes are expressed in most cells and their expression level is specific to cell types. High expression level (i.e., high percentage) of mitochondrial genes could be detected from apoptotic or lysing cells, which should not be included in the analysis. ERCC spike-ins are used to estimate total mRNA content captured in cells. High level of ERCC is likely caused by cell death. Similarly, cells with a high percentage of ERCC need to be filtered.</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li><strong>Normalization</strong></li>
+</ol>
+<ul>
+<li><strong>Removing unwanted confounding factors:</strong> Single cells may contain unwanted sources of variation, such as technical noise. These factors may have a disturbing effect on downstream analysis and should be removed out. Seurat provides a function to regress user-defined variables out.</li>
+<li><strong>Variance shrinkage and high-variance gene identification:</strong> Based on the assumption that the expression level of most genes in all cells is similar, variance adjustment is needed to preserve biological variation and minimize unknown experiment variation. After shrinking variance, really highly variable genes are identified and only the top 2000 variable genes are used in the downstream analysis.</li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li><strong>Analysis</strong></li>
+</ol>
+<ul>
+<li><strong>Dimension reduction and determining significant components:</strong> MAESTRO performed PCA on top variable features to reduce the dimension of the dataset. An elbow plot is generated to visualize the variance of each PC and identify the “elbow” point to determine the significant PCs. If not set, the top 15 PCs will be selected by default for downstream analysis.</li>
+<li><strong>Clustering:</strong> MAESTRO employs the graph-based clustering method in Seurat for scRNA-seq clustering analysis. Please see <a href="https://www.cell.com/cell/pdf/S0092-8674(19)30559-8.pdf">Seurat</a> for the details. Briefly, MAESTRO will build a K-nearest neighbor (KNN) graph using the reduced dimensions from the previous step, and then refine the edge weights between two cells based on the Jaccard similarity of their neighborhoods, which are completed by the <code>FindNeighbors</code> function in Seurat. To cluster the cells, MAESTRO uses the <code>FindClusters</code> function in Seurat, which applies the Louvain algorithm to cluster cells together iteratively. The default clustering resolution for scRNA-seq is set to 0.6, and users can also tune the parameter for different conditions. Besides, extra parameters for <code>FindNeighbors</code> and <code>FindClusters</code> can be passed via <code>findneighbors.args</code> and <code>findclusters.args</code>. For example, users can set <code>findneighbors.args = list(k.param = 25)</code> to define k = 25 for the k-nearest neighbor algorithm.</li>
+<li><strong>UMAP visualization:</strong> UMAP is used to visualize all the single cells. MAESTRO adopts <a href="https://arxiv.org/abs/1802.03426">UMAP</a> to achieve a low dimension embedding, in which similar cells are placed together. To get a better result for visualization, users can tune the parameters of <code>RunUMAP</code> by adding the arguments in <code>RNARunSeurat</code> function, like <code>RNARunSeurat(inputMat = pbmc.gene, ..., n.neighbors = 20, min.dist = 0.2)</code>.</li>
+<li><strong>Differential gene analysis:</strong> The default differential expression method is <a href="https://github.com/immunogenomics/presto">presto</a>, a fast version of Wilcoxon test. Users can also use other model-based methods like <a href="https://bioconductor.org/packages/release/bioc/html/DESeq2.html">DESeq2</a> and <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4676162/">MAST</a>. These methods have been integrated into <code>FindAllMarkers</code> function in Seurat. We provide <code>FindAllMarkersMAESTRO</code> function in MAESTRO, which is adapted from <code>FindAllMarkers</code>, to reduce the computational time and memory. Genes with logFC greater than 0.25, minimum presence faction in cells of 0.1, and p-value less than 1E-5 are identified as marker genes for each cluster.</li>
+</ul>
+<pre class="r"><code>pbmc.RNA.res &lt;- RNARunSeurat(inputMat = pbmc.gene,
+                               project = &quot;pbmc_1k_v3&quot;,
+                               orig.ident = NULL,
+                               min.c = 10,
+                               min.g = 200,
+                               mito = TRUE,
+                               mito.cutoff = 20,
+                               variable.genes = 2000,
+                               organism = &quot;GRCh38&quot;,
+                               dims.use = 1:15,
+                               cluster.res = 0.6,
+                               only.pos = FALSE,
+                               genes.test.use = &quot;presto&quot;,
+                               genes.cutoff = 1e-05,
+                               genes.pct = 0.1,
+                               genes.logfc = 0.25,
+                               outdir = &quot;./docs/assets/scrna/&quot;)</code></pre>
+<pre><code>Check the mitochondria and spike-in percentage ...</code></pre>
+<pre><code>Normalization and identify variable genes ...</code></pre>
+<pre><code>Regressing out nCount_RNA, percent.mito, percent.ercc</code></pre>
+<pre><code>Centering and scaling data matrix</code></pre>
+<pre><code>PCA analysis ...</code></pre>
+<pre><code>PC_ 1 
+Positive:  LTB, TRAC, TRBC2, CD3D, LCK, ISG20, IL32, IL7R, TCF7, BCL11B 
+       LDHB, CD27, CD3G, CD69, ARL4C, PEBP1, SPOCK2, MZT2A, CD2, CD247 
+       NOSIP, CD7, TRBC1, AQP3, CD6, PRKCQ-AS1, PRDX2, PLAAT4, GZMM, RORA 
+Negative:  LYZ, FCN1, S100A9, MNDA, S100A8, FGL2, CST3, VCAN, CTSS, SERPINA1 
+       CSTA, NCF2, PSAP, AIF1, KLF4, TYMP, MPEG1, S100A12, GRN, MS4A6A 
+       FTL, CYBB, CD14, CLEC7A, TNFAIP2, LST1, CSF3R, SLC7A7, FCER1G, CD36 
+PC_ 2 
+Positive:  CD79A, MS4A1, IGHM, BANK1, LINC00926, HLA-DQA1, CD74, CD79B, IGHD, HLA-DQB1 
+       HLA-DRB1, HLA-DRA, CD22, HLA-DPA1, HLA-DPB1, TNFRSF13C, TCL1A, SPIB, HLA-DQA2, AFF3 
+       BCL11A, HLA-DRB6, VPREB3, MEF2C, FCER2, HVCN1, NIBAN3, RALGPS2, IGKC, FCRL1 
+Negative:  IL32, CTSW, GZMM, CD247, LCK, GZMA, CD7, NKG7, S100A4, CD3D 
+       ANXA1, PRF1, KLRB1, CST7, CCL5, PLAAT4, RORA, CD3G, TRAC, KLRG1 
+       ARL4C, IL7R, BCL11B, ZAP70, SAMD3, CD2, SYNE2, MATK, ACTG1, TRBC1 
+PC_ 3 
+Positive:  GZMB, GNLY, KLRD1, KLRF1, NKG7, CLIC3, SPON2, PRF1, CST7, FGFBP2 
+       ADGRG1, GZMA, CCL4, TRDC, HOPX, TTC38, RHOC, TBX21, IL2RB, MATK 
+       CD160, FCGR3A, APMAP, SH2D1B, CCL5, CTSW, C12orf75, APOBEC3G, PTGDR, MYOM2 
+Negative:  LDHB, IL7R, TCF7, LEF1, MAL, TRABD2A, RCAN3, CD3D, BCL11B, NOSIP 
+       CCR7, TRAC, LTB, CD3G, VIM, CAMK4, CD27, NELL2, PASK, CD5 
+       CHRM3-AS2, FHIT, CD6, FAM153CP, TSHZ2, INPP4B, PRKCQ-AS1, LINC01550, TRAT1, EGR1 
+PC_ 4 
+Positive:  CAVIN2, PRKAR2B, TUBB1, GNG11, PPBP, PF4, ITGA2B, CLU, GP9, TREML1 
+       ESAM, PTCRA, ANKRD9, CTTN, C2orf88, CD9, GMPR, MPIG6B, TMEM158, TNNC2 
+       ITGB3, MTURN, SPARC, GP1BA, FAXDC2, H2AC6, CXCR2P1, ACRBP, MYLK, LMNA 
+Negative:  TMSB10, MT-CO1, GNLY, KLRD1, NKG7, KLRF1, CST7, SPON2, PRF1, FGFBP2 
+       ADGRG1, GZMA, CCL4, HOPX, APOBEC3G, TTC38, TRDC, GZMB, EFHD2, IL2RB 
+       MATK, TBX21, CD160, FCGR3A, CMC1, ITGB2, CLIC3, S1PR5, SH2D1B, MYOM2 
+PC_ 5 
+Positive:  CDKN1C, HES4, FCGR3A, TCF7L2, AC104809.2, SIGLEC10, NEURL1, MTSS1, ZNF703, SMIM25 
+       RHOC, CKB, RPS15AP30, IFITM3, C3AR1, IFI30, CSF1R, CAMK1, MYOF, ABI3 
+       MS4A7, RRAS, SECTM1, FAM110A, HMOX1, MS4A4A, FMNL2, GPBAR1, PPM1N, AC064805.1 
+Negative:  SERPINF1, SMPD3, LILRA4, AL096865.1, CLEC4C, TPM2, DERL3, DNASE1L3, PACSIN1, TNFRSF21 
+       GAS6, NRP1, ALOX5AP, ITM2C, IL3RA, MZB1, LAMP5, MYBL2, JCHAIN, SCN9A 
+       LINC01226, BX571818.1, LINC02812, LINC00996, CIB2, SERPINF2, UGCG, CCDC50, APP, RUNX2 </code></pre>
+<pre><code>UMAP analysis ...</code></pre>
+<pre><code>Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+To use Python UMAP via reticulate, set umap.method to &#39;umap-learn&#39; and metric to &#39;correlation&#39;
+This message will be shown once per session</code></pre>
+<pre><code>10:36:54 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
+<pre><code>10:36:54 Read 1076 rows and found 15 numeric columns</code></pre>
+<pre><code>10:36:54 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
+<pre><code>10:36:54 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
+<pre><code>0%   10   20   30   40   50   60   70   80   90   100%</code></pre>
+<pre><code>[----|----|----|----|----|----|----|----|----|----|</code></pre>
+<pre><code>**************************************************|
+10:36:54 Writing NN index file to temp file /var/folders/bx/3yng1lx579x084wwkjz1xc6c0000gp/T//RtmpPlO4wZ/filebbfc61259b22
+10:36:54 Searching Annoy index using 1 thread, search_k = 3000
+10:36:54 Annoy recall = 100%
+10:36:55 Commencing smooth kNN distance calibration using 1 thread
+10:36:56 Initializing from normalized Laplacian + noise
+10:36:56 Commencing optimization for 500 epochs, with 43052 positive edges
+10:36:58 Optimization finished</code></pre>
+<pre><code>Warning: The following arguments are not used: dims1, dims2, dims3, dims4,
+dims5, dims6, dims7, dims8, dims9, dims10, dims11, dims12, dims13, dims14,
+dims15</code></pre>
+<pre><code>Warning: The following arguments are not used: dims1, dims2, dims3, dims4,
+dims5, dims6, dims7, dims8, dims9, dims10, dims11, dims12, dims13, dims14,
+dims15</code></pre>
+<pre><code>Computing nearest neighbor graph
+Computing SNN</code></pre>
+<pre><code>Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+
+Number of nodes: 1076
+Number of edges: 32704
+
+Running Louvain algorithm...
+Maximum modularity in 10 random starts: 0.8663
+Number of communities: 7
+Elapsed time: 0 seconds</code></pre>
+<pre><code>Identify cluster specific genes ...</code></pre>
+<p><code>RNARunSeurat()</code> generates plots of QC and clustering in the current working directory, and returns a list of a Seurat object <code>RNA</code> and dataframe <code>genes</code>. Please see <a href="https://github.com/satijalab/seurat/wiki">Seurat Github wiki</a> for more details of the Seurat object structure. Users can use the <code>str()</code> command to get an intuitive understanding of the object.</p>
+<pre class="r"><code>pbmc.RNA.res$RNA</code></pre>
+<pre><code>An object of class Seurat 
+13773 features across 1076 samples within 1 assay 
+Active assay: RNA (13773 features, 2000 variable features)
+ 2 dimensional reductions calculated: pca, umap</code></pre>
+<pre class="r"><code>head(pbmc.RNA.res$genes)</code></pre>
+<pre><code>          p_val avg_logFC pct.1 pct.2     p_val_adj cluster       gene
+1 6.409175e-197  2.984071 0.989 0.064 8.827356e-193       0    S100A12
+2 1.711575e-191  2.630080 0.996 0.085 1.178676e-187       0       VCAN
+3 1.398256e-180  4.074015 1.000 0.143 6.419391e-177       0     S100A8
+4 1.997655e-178  1.882858 0.960 0.076 6.878424e-175       0       CD14
+5 5.492107e-176  2.219625 0.996 0.121 1.512856e-172       0       MNDA
+6 4.352239e-175  1.620355 0.952 0.077 9.990565e-172       0 AC020656.1</code></pre>
+<p>In the <code>outdir/</code> directory you will find the following outputs:</p>
+<p><img src="assets/scrna/pbmc_1k_v3.spikein.png" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-pbmc_1k_v3.spikein">
+Past versions of pbmc_1k_v3.spikein.png
+</button>
+</p>
+<div id="fig-pbmc_1k_v3.spikein" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/d02c8c121faf4bc6e4430cccfe2d34ad9506f3ad/docs/assets/scrna/pbmc_1k_v3.spikein.png" target="_blank">d02c8c1</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-19
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/30fbad89c063504021ad8704a527bcaee84d24b2/docs/assets/scrna/pbmc_1k_v3.spikein.png" target="_blank">30fbad8</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-22
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/df0c2882fe04c6abfaa338b9e6d3ff22f473e62c/docs/assets/scrna/pbmc_1k_v3.spikein.png" target="_blank">df0c288</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="assets/scrna/pbmc_1k_v3_PCElbowPlot.png" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-pbmc_1k_v3_PCElbowPlot">
+Past versions of pbmc_1k_v3_PCElbowPlot.png
+</button>
+</p>
+<div id="fig-pbmc_1k_v3_PCElbowPlot" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/d02c8c121faf4bc6e4430cccfe2d34ad9506f3ad/docs/assets/scrna/pbmc_1k_v3_PCElbowPlot.png" target="_blank">d02c8c1</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-19
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/30fbad89c063504021ad8704a527bcaee84d24b2/docs/assets/scrna/pbmc_1k_v3_PCElbowPlot.png" target="_blank">30fbad8</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-22
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/317af89d7aef97fabb8b8a3d3df9579a676ad5fc/docs/assets/scrna/pbmc_1k_v3_PCElbowPlot.png" target="_blank">317af89</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-21
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/df0c2882fe04c6abfaa338b9e6d3ff22f473e62c/docs/assets/scrna/pbmc_1k_v3_PCElbowPlot.png" target="_blank">df0c288</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="assets/scrna/pbmc_1k_v3_cluster.png" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-pbmc_1k_v3_cluster">
+Past versions of pbmc_1k_v3_cluster.png
+</button>
+</p>
+<div id="fig-pbmc_1k_v3_cluster" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/d02c8c121faf4bc6e4430cccfe2d34ad9506f3ad/docs/assets/scrna/pbmc_1k_v3_cluster.png" target="_blank">d02c8c1</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-19
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/30fbad89c063504021ad8704a527bcaee84d24b2/docs/assets/scrna/pbmc_1k_v3_cluster.png" target="_blank">30fbad8</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-22
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/317af89d7aef97fabb8b8a3d3df9579a676ad5fc/docs/assets/scrna/pbmc_1k_v3_cluster.png" target="_blank">317af89</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-21
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/df0c2882fe04c6abfaa338b9e6d3ff22f473e62c/docs/assets/scrna/pbmc_1k_v3_cluster.png" target="_blank">df0c288</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="step-2.-annotate-cell-types" class="section level3">
+<h3>Step 2. Annotate cell types</h3>
+<p>We next try to annotate different clusters based on their marker genes. We use public immune signatures like <a href="https://www.nature.com/articles/nmeth.3337">CIBERSORT</a> to annotate the clusters. Users can also use their signatures to annotate the clusters. Cell type information is stored in <code>Object@meta.data$assign.ident</code>.</p>
+<pre class="r"><code>data(human.immune.CIBERSORT)
+pbmc.RNA.res$RNA &lt;- RNAAnnotateCelltype(RNA = pbmc.RNA.res$RNA,
+                                          gene = pbmc.RNA.res$genes,
+                                          signatures = &quot;human.immune.CIBERSORT&quot;,
+                                          min.score = 0.05,
+                                          outdir = &quot;./docs/assets/scrna/&quot;)</code></pre>
+<pre><code>The following `from` values were not present in `x`: ActDCs, ActMast, ActMemCD4Tcells, ActNK, ActpDCs, CD8Tex, Endothelial, Eosinophils, Fibroblasts, MacrophagesM0, MacrophagesM1, MacrophagesM2, MemoryBcells, Myofibroblasts, Neutrophils, PlasmaCells, RestDCs, RestMast, RestpDCs, Tfh, TMKI67, Treg</code></pre>
+<pre class="r"><code>head(pbmc.RNA.res$RNA@meta.data)</code></pre>
+<pre><code>                 orig.ident nCount_RNA nFeature_RNA percent.mito percent.ercc
+AAACCCAAGGAGAGTA pbmc_1k_v3       8333         2672    11.844474   0.01200048
+AAACGCTTCAGCCCAG pbmc_1k_v3       5579         1858     9.302742   0.01792436
+AAAGAACAGACGACTG pbmc_1k_v3       4278         1584     6.778869   0.00000000
+AAAGAACCAATGGCAG pbmc_1k_v3       2793         1239     7.375582   0.03580380
+AAAGAACGTCTGCAAT pbmc_1k_v3       6595         1882     7.172100   0.03032600
+AAAGGATAGTAGACAT pbmc_1k_v3       8887         2129     8.765613   0.01125239
+                 RNA_snn_res.0.6 seurat_clusters assign.ident assign.score
+AAACCCAAGGAGAGTA               0               0   Mono/Macro     6.686894
+AAACGCTTCAGCCCAG               2               2            B     7.863053
+AAAGAACAGACGACTG               4               4         CD8T     4.862934
+AAAGAACCAATGGCAG               4               4         CD8T     4.862934
+AAAGAACGTCTGCAAT               1               1     CD4Tconv     2.714105
+AAAGGATAGTAGACAT               2               2            B     7.863053</code></pre>
+<p><img src="assets/scrna/pbmc_1k_v3_annotated.png" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-pbmc_1k_v3_annotated">
+Past versions of pbmc_1k_v3_annotated.png
+</button>
+</p>
+<div id="fig-pbmc_1k_v3_annotated" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/d02c8c121faf4bc6e4430cccfe2d34ad9506f3ad/docs/assets/scrna/pbmc_1k_v3_annotated.png" target="_blank">d02c8c1</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-19
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/30fbad89c063504021ad8704a527bcaee84d24b2/docs/assets/scrna/pbmc_1k_v3_annotated.png" target="_blank">30fbad8</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-22
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/317af89d7aef97fabb8b8a3d3df9579a676ad5fc/docs/assets/scrna/pbmc_1k_v3_annotated.png" target="_blank">317af89</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-21
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/df0c2882fe04c6abfaa338b9e6d3ff22f473e62c/docs/assets/scrna/pbmc_1k_v3_annotated.png" target="_blank">df0c288</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>All the reduction results are stored in <code>Object@reductions</code>. For example, users can use <code>Object@reductions$umap@cell.embeddings</code> to extract the cell embedding result of UMAP for custom plotting. Or users can directly use <code>DimPlot()</code> from Seurat and other functions like <code>theme()</code> from ggplot2 to generate a prettier plot.</p>
+<pre class="r"><code>library(ggplot2)
+library(RColorBrewer)
+DimPlot(object = pbmc.RNA.res$RNA, label = TRUE, pt.size = 0.15,
+        group.by = &quot;assign.ident&quot;, label.size = 3,
+        cols = brewer.pal(8,&quot;Set2&quot;)) +
+        theme_linedraw() + NoLegend()</code></pre>
+<p><img src="figure/scrna_stepbystep.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/3e0057c4482bb3cb27d8badd29db34f4ff3f0706/docs/figure/scrna_stepbystep.Rmd/unnamed-chunk-8-1.png" target="_blank">3e0057c</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-13
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/71fb9af86c756612a5a5898fbcfbed11cbee6547/docs/figure/scrna_stepbystep.Rmd/unnamed-chunk-8-1.png" target="_blank">71fb9af</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-21
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/f083ec51c21b927bcfe237d32577d2fdd2430e7c/docs/figure/scrna_stepbystep.Rmd/unnamed-chunk-8-1.png" target="_blank">f083ec5</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="step-3.-identify-driver-transcription-regulators" class="section level3">
+<h3>Step 3. Identify driver transcription regulators</h3>
+<p>To identify enriched transcription regulators is crucial to understanding gene regulation in the heterogeneous single-cell populations. MAESTRO utilizes LISA to predict the potential transcription factors based on the marker genes in each cluster, which rely on the transcriptional regulator binding profiles from CistromeDB to identify the potential regulators shaping the expression pattern of each cluster. In rare cases, users need to download LISA data manually. If the program fails while downloading data, follow this <a href="https://github.com/liulab-dfci/lisa2/blob/master/docs/troubleshooting.md">LISA document</a>. If users have multiple clusters of differential genes, the “multi” mode is recommended.</p>
+<pre class="r"><code>pbmc.RNA.tfs &lt;- RNAAnnotateTranscriptionFactor(RNA = pbmc.RNA.res$RNA,
+                                                 genes = pbmc.RNA.res$genes,
+                                                 project = pbmc.RNA.res$RNA@project.name,
+                                                 organism = &quot;GRCh38&quot;,
+                                                 lisa.path = &quot;/Users/galib/miniconda3/envs/lisa_env/bin/.venvs/lisa_env/bin/lisa&quot;,
+                                                 top.tf = 10,
+                                                 outdir = &quot;./docs/assets/scrna/&quot;)</code></pre>
+<pre><code>Start to run Lisa.</code></pre>
+<pre><code>Lisa in cluster 6 is done!</code></pre>
+<pre><code>Lisa is done.</code></pre>
+<pre class="r"><code>pbmc.RNA.tfs[[&quot;0&quot;]]</code></pre>
+<pre><code> [1] &quot;SPI1 | IRF1 | BCL6 | STAT2 | IRF8 | STAT1 | STAT3 | IRF2 | STAT5A | IRF3 | BCL11A | STAT5B | IRF4 | PRDM1 | SPIB&quot;
+ [2] &quot;CEBPD | CEBPB | ATF4 | CEBPA | CEBPG | NFIL3 | DDIT3 | DBP | BATF | CEBPE | BATF3&quot;                               
+ [3] &quot;SMAD1&quot;                                                                                                           
+ [4] &quot;KMT2A&quot;                                                                                                           
+ [5] &quot;ELF1 | FLI1 | ETV6 | ETS2 | ELF2 | ELK3 | ELK4 | GABPA | NFAT5 | ELK1 | ELF3 | ETS1 | ETV2&quot;                      
+ [6] &quot;BRD4&quot;                                                                                                            
+ [7] &quot;JMJD1C&quot;                                                                                                          
+ [8] &quot;RUNX1 | CBFB | RUNX3 | RUNX2&quot;                                                                                    
+ [9] &quot;LYL1 | ZBTB18 | TCF4 | TCF12 | ASCL2 | TFAP4 | TCF3 | SNAI1 | GATA3&quot;                                             
+[10] &quot;LMO2&quot;                                                                                                            </code></pre>
+<p>Besides identifying TFs for all the clusters, we also support the differential gene list from a single comparison.</p>
+<pre class="r"><code>de.geneset &lt;- FindMarkersMAESTRO(pbmc.RNA.res$RNA, ident.1 = c(3))
+pbmc.RNA.monocyte.tfs &lt;- RNAAnnotateTranscriptionFactor(RNA = pbmc.RNA.res$RNA,
+                                                          genes = de.geneset,
+                                                          cluster = c(3),
+                                                          project = &quot;pbmc_1k_v3_Monocyte&quot;,
+                                                          organism = &quot;GRCh38&quot;,
+                                                          top.tf = 20,
+                                                          lisa.path = &quot;/Users/galib/miniconda3/envs/lisa_env/bin/.venvs/lisa_env/bin/lisa&quot;,
+                                                          outdir = &quot;./docs/assets/scrna/&quot;)</code></pre>
+<pre><code>Start to run Lisa.</code></pre>
+<pre><code>Lisa in cluster 3 is done!</code></pre>
+<pre><code>Lisa is done.</code></pre>
+</div>
+<div id="step-4.-visualize-driver-transcription-factors-for-each-cluster" class="section level3">
+<h3>Step 4. Visualize driver transcription factors for each cluster</h3>
+<p>According to the annotation of the clusters, we know that cluster 3 is Monocyte. Next, we want to visualize the enriched regulators in Monocyte from Step 5.</p>
+<p>The output TFs returned from <code>RNAAnnotateTranscriptionFactor</code> have already been pre-filtered based on TF expression level.</p>
+<pre class="r"><code>tfs &lt;- sapply(pbmc.RNA.monocyte.tfs[[1]], function(x){
+                return(unlist(strsplit(x, split = &quot; | &quot;, fixed = TRUE))[1])})
+VisualizeTFenrichment(TFs = tfs,
+                             cluster.1 = 3,
+                             type = &quot;RNA&quot;,
+                             SeuratObj = pbmc.RNA.res$RNA,
+                             LISA.table = &quot;pbmc_1k_v3_Monocyte_lisa.txt&quot;,
+                             visual.totalnumber = 100,
+                             name = &quot;pbmc_1k_v3_Monocyte_filtered&quot;)</code></pre>
+<pre><code>Warning: Removed 4 rows containing missing values (geom_point).</code></pre>
+<pre><code>Warning: Removed 4 rows containing missing values (geom_text_repel).</code></pre>
+<pre><code>Warning: ggrepel: 7 unlabeled data points (too many overlaps). Consider
+increasing max.overlaps</code></pre>
+<pre><code>Warning: Removed 4 rows containing missing values (geom_point).</code></pre>
+<pre><code>Warning: Removed 4 rows containing missing values (geom_text_repel).</code></pre>
+<pre><code>Warning: ggrepel: 5 unlabeled data points (too many overlaps). Consider
+increasing max.overlaps</code></pre>
+<p><img src="figure/scrna_stepbystep.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/6e473ba32d397ac6666708b12c3fbe9a26895c45/docs/figure/scrna_stepbystep.Rmd/unnamed-chunk-11-1.png" target="_blank">6e473ba</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>If users want to visualize the top factors without filtering. Please leave the TFs to NULL, then the top 10 regulators will be visualized.</p>
+<pre class="r"><code>VisualizeTFenrichment(cluster.1 = 3,
+                             type = &quot;RNA&quot;,
+                             SeuratObj = pbmc.RNA.res$RNA,
+                             LISA.table = &quot;pbmc_1k_v3_Monocyte_lisa.txt&quot;,
+                             visual.topnumber = 10,
+                             visual.totalnumber = 100,
+                             name = &quot;pbmc_1k_v3_Monocyte_top&quot;)</code></pre>
+<p><img src="figure/scrna_stepbystep.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/6e473ba32d397ac6666708b12c3fbe9a26895c45/docs/figure/scrna_stepbystep.Rmd/unnamed-chunk-12-1.png" target="_blank">6e473ba</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>To further filter the regulators, users may want to visualize the expression level of the predicted transcription factors. We provide the function for visualize TF/genes expression level using Vlnplot and Umap.</p>
+<pre class="r"><code>VisualizeVlnplot(genes = c(&quot;SPI1&quot;,&quot;CEBPB&quot;),
+                        type = &quot;RNA&quot;,
+                        SeuratObj = pbmc.RNA.res$RNA,
+                        ncol = 2,
+                        width = 8.5,
+                        height = 4,
+                        name = &quot;pbmc_1k_v3_Monocyte&quot;)</code></pre>
+<pre><code>Warning: CombinePlots is being deprecated. Plots should now be combined using
+the patchwork system.</code></pre>
+<p><img src="figure/scrna_stepbystep.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
+Past versions of unnamed-chunk-13-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/3e0057c4482bb3cb27d8badd29db34f4ff3f0706/docs/figure/scrna_stepbystep.Rmd/unnamed-chunk-13-1.png" target="_blank">3e0057c</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-13
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/71fb9af86c756612a5a5898fbcfbed11cbee6547/docs/figure/scrna_stepbystep.Rmd/unnamed-chunk-13-1.png" target="_blank">71fb9af</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>VisualizeUmap(genes = c(&quot;SPI1&quot;,&quot;CEBPB&quot;),
+                     type = &quot;RNA&quot;,
+                     SeuratObj = pbmc.RNA.res$RNA,
+                     ncol = 2,
+                     width = 8,
+                     height = 3,
+                     name = &quot;pbmc_1k_v3_Monocyte&quot;)</code></pre>
+<pre><code>Warning: CombinePlots is being deprecated. Plots should now be combined using
+the patchwork system.</code></pre>
+<p><img src="figure/scrna_stepbystep.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/3e0057c4482bb3cb27d8badd29db34f4ff3f0706/docs/figure/scrna_stepbystep.Rmd/unnamed-chunk-14-1.png" target="_blank">3e0057c</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-13
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="step-5.-save-the-object-for-future-analysis" class="section level3">
+<h3>Step 5. Save the object for future analysis</h3>
+<p>Finally, users can save the R object, including the raw data, normalized data, clustering result, and meta information for future analysis.</p>
+<pre class="r"><code>saveRDS(pbmc.RNA.res, &quot;pbmc_1k_v3_8k_res.rds&quot;)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.0 (2021-05-18)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Big Sur 10.16
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] RColorBrewer_1.1-2 ggplot2_3.3.5      SeuratObject_4.0.2 Seurat_4.0.1      
+[5] MAESTRO_1.5.0      workflowr_1.6.2   
+
+loaded via a namespace (and not attached):
+  [1] rappdirs_0.3.3              SnowballC_0.7.0            
+  [3] rtracklayer_1.52.0          scattermore_0.7            
+  [5] tidyr_1.1.3                 bit64_4.0.5                
+  [7] knitr_1.33                  irlba_2.3.3                
+  [9] DelayedArray_0.18.0         data.table_1.14.0          
+ [11] rpart_4.1-15                KEGGREST_1.32.0            
+ [13] RCurl_1.98-1.3              AnnotationFilter_1.16.0    
+ [15] generics_0.1.0              BiocGenerics_0.38.0        
+ [17] GenomicFeatures_1.44.0      callr_3.7.0                
+ [19] cowplot_1.1.1               usethis_2.0.1              
+ [21] RSQLite_2.2.7               EnsDb.Mmusculus.v79_2.99.0 
+ [23] RANN_2.6.1                  future_1.21.0              
+ [25] bit_4.0.4                   spatstat.data_2.1-0        
+ [27] xml2_1.3.2                  lubridate_1.7.10           
+ [29] httpuv_1.6.1                SummarizedExperiment_1.22.0
+ [31] assertthat_0.2.1            xfun_0.24                  
+ [33] hms_1.1.0                   jquerylib_0.1.4            
+ [35] evaluate_0.14               promises_1.2.0.1           
+ [37] fansi_0.5.0                 restfulr_0.0.13            
+ [39] progress_1.2.2              caTools_1.18.2             
+ [41] dbplyr_2.1.1                igraph_1.2.6               
+ [43] DBI_1.1.1                   htmlwidgets_1.5.3          
+ [45] sparsesvd_0.2               spatstat.geom_2.2-0        
+ [47] stats4_4.1.0                purrr_0.3.4                
+ [49] ellipsis_0.3.2              RSpectra_0.16-0            
+ [51] dplyr_1.0.7                 backports_1.2.1            
+ [53] biomaRt_2.48.1              deldir_0.2-10              
+ [55] MatrixGenerics_1.4.0        vctrs_0.3.8                
+ [57] Biobase_2.52.0              remotes_2.4.0              
+ [59] ensembldb_2.16.0            ROCR_1.0-11                
+ [61] abind_1.4-5                 cachem_1.0.5               
+ [63] withr_2.4.2                 ggforce_0.3.3              
+ [65] presto_1.0.0                checkmate_2.0.0            
+ [67] sctransform_0.3.2           GenomicAlignments_1.28.0   
+ [69] prettyunits_1.1.1           goftest_1.2-2              
+ [71] cluster_2.1.2               lazyeval_0.2.2             
+ [73] crayon_1.4.1                hdf5r_1.3.3                
+ [75] labeling_0.4.2              pkgconfig_2.0.3            
+ [77] slam_0.1-48                 tweenr_1.0.2               
+ [79] GenomeInfoDb_1.28.0         nlme_3.1-152               
+ [81] pkgload_1.2.1               ProtGenerics_1.24.0        
+ [83] nnet_7.3-16                 devtools_2.4.2             
+ [85] rlang_0.4.11                globals_0.14.0             
+ [87] lifecycle_1.0.0             miniUI_0.1.1.1             
+ [89] filelock_1.0.2              BiocFileCache_2.0.0        
+ [91] rprojroot_2.0.2             polyclip_1.10-0            
+ [93] matrixStats_0.59.0          lmtest_0.9-38              
+ [95] Matrix_1.3-4                ggseqlogo_0.1              
+ [97] zoo_1.8-9                   base64enc_0.1-3            
+ [99] whisker_0.4                 ggridges_0.5.3             
+[101] processx_3.5.2              png_0.1-7                  
+[103] viridisLite_0.4.0           rjson_0.2.20               
+[105] bitops_1.0-7                KernSmooth_2.23-20         
+[107] Biostrings_2.60.1           blob_1.2.1                 
+[109] stringr_1.4.0               forestplot_1.10.1          
+[111] parallelly_1.26.0           jpeg_0.1-8.1               
+[113] S4Vectors_0.30.0            scales_1.1.1               
+[115] memoise_2.0.0               magrittr_2.0.1             
+[117] plyr_1.8.6                  ica_1.0-2                  
+[119] gplots_3.1.1                zlibbioc_1.38.0            
+[121] compiler_4.1.0              Gmisc_1.10.0               
+[123] BiocIO_1.2.0                fitdistrplus_1.1-5         
+[125] Rsamtools_2.8.0             cli_3.0.0                  
+[127] XVector_0.32.0              listenv_0.8.0              
+[129] patchwork_1.1.1             pbapply_1.4-3              
+[131] ps_1.6.0                    htmlTable_2.2.1            
+[133] Formula_1.2-4               MASS_7.3-54                
+[135] mgcv_1.8-36                 tidyselect_1.1.1           
+[137] stringi_1.6.2               highr_0.9                  
+[139] yaml_2.2.1                  latticeExtra_0.6-29        
+[141] ggrepel_0.9.1               grid_4.1.0                 
+[143] sass_0.4.0                  fastmatch_1.1-0            
+[145] EnsDb.Hsapiens.v86_2.99.0   tools_4.1.0                
+[147] future.apply_1.7.0          parallel_4.1.0             
+[149] rstudioapi_0.13             foreign_0.8-81             
+[151] lsa_0.73.2                  git2r_0.28.0               
+[153] gridExtra_2.3               farver_2.1.0               
+[155] Rtsne_0.15                  digest_0.6.27              
+[157] shiny_1.6.0                 qlcMatrix_0.9.7            
+[159] Rcpp_1.0.6                  GenomicRanges_1.44.0       
+[161] later_1.2.0                 RcppAnnoy_0.0.18           
+[163] httr_1.4.2                  AnnotationDbi_1.54.1       
+[165] colorspace_2.0-2            XML_3.99-0.6               
+[167] fs_1.5.0                    tensor_1.5                 
+[169] reticulate_1.20             IRanges_2.26.0             
+[171] splines_4.1.0               uwot_0.1.10                
+[173] RcppRoll_0.3.0              spatstat.utils_2.2-0       
+[175] sessioninfo_1.1.1           plotly_4.9.4.1             
+[177] xtable_1.8-4                jsonlite_1.7.2             
+[179] testthat_3.0.3              R6_2.5.0                   
+[181] Hmisc_4.5-0                 pillar_1.6.1               
+[183] htmltools_0.5.1.1           mime_0.11                  
+[185] glue_1.4.2                  fastmap_1.1.0              
+[187] BiocParallel_1.26.0         codetools_0.2-18           
+[189] pkgbuild_1.2.0              Signac_1.2.1               
+[191] utf8_1.2.1                  lattice_0.20-44            
+[193] bslib_0.2.5.1               spatstat.sparse_2.0-0      
+[195] tibble_3.1.2                curl_4.3.2                 
+[197] leiden_0.3.8                gtools_3.9.2               
+[199] survival_3.2-11             rmarkdown_2.9              
+[201] docopt_0.7.1                desc_1.3.0                 
+[203] munsell_0.5.0               GenomeInfoDbData_1.2.6     
+[205] reshape2_1.4.4              gtable_0.3.0               
+[207] spatstat.core_2.2-0        </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

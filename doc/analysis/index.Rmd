@@ -1,0 +1,100 @@
+---
+title: "MAESTRO"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: false
+editor_options:
+  chunk_output_type: console
+---
+
+**MAESTRO**(**M**odel-based **A**nalys**E**s of **S**ingle-cell **T**ranscriptome and **R**egul**O**me) is a comprehensive single-cell RNA-seq and ATAC-seq analysis suit built using [snakemake](https://bitbucket.org/snakemake/snakemake/wiki/Home). MAESTRO combines several dozen tools and packages to create an integrative pipeline, which enables scRNA-seq and scATAC-seq analysis from raw sequencing data (fastq files) all the way through alignment, quality control, cell filtering, normalization, unsupervised clustering, differential expression and peak calling, celltype annotation and transcription regulation analysis. Currently, MAESTRO support [Smart-seq2](https://www.ncbi.nlm.nih.gov/pubmed/24385147), [10x-genomics](https://www.10xgenomics.com/solutions/single-cell/), [Drop-seq](https://www.cell.com/abstract/S0092-8674(15)00549-8), [SPLiT-seq](https://science.sciencemag.org/content/360/6385/176) for scRNA-seq protocols; [microfudics-based](https://www.ncbi.nlm.nih.gov/pubmed/26083756), [10x-genomics](https://www.10xgenomics.com/solutions/single-cell-atac/) and [sci-ATAC-seq](https://science.sciencemag.org/content/348/6237/910) for scATAC-seq protocols. 
+
+## Usage
+
+MAESTRO provides ten functions serving as sub-commands. To get a full list of commands and descriptions:
+
+```{bash, eval=FALSE}
+MAESTRO
+
+usage: MAESTRO [-h] [-v]
+               {scrna-init,scatac-init,integrate-init,samples-init,mtx-to-h5,count-to-h5, merge-h5,scrna-qc,scatac-qc,scatac-peakcount,scatac-genescore}
+```
+
+Subcommand | Description
+-----------|----------
+`scrna-init` | Initialize the MAESTRO scRNA-seq workflow.
+`scatac-init` | Initialize the MAESTRO scATAC-seq workflow.
+`integrate-init` | Initialize the MAESTRO integration workflow.
+`samples-init` | Initialize samples.json file in the current directory.
+`mtx-to-h5` | Convert 10X mtx format matrix to HDF5 format.
+`count-to-h5` | Convert plain text count table to HDF5 format.
+`merge-h5` | Merge multiple HDF5 files, e.g. different replicates.
+`scrna-qc` | Perform quality control for scRNA-seq gene-cell count matrix.
+`scatac-qc` | Perform quality control for scATAC-seq peak-cell count matrix.
+`scatac-peakcount` | Generate peak-cell binary count matrix.
+`scatac-genescore` | Calculate gene score based on the binarized scATAC peak count.
+
+### Usecases
+
+The most general use case for MAESTRO is to process single-cell data with a streamlined pipeline. The basic idea of running MAESTRO is summarized as the following three steps.
+
+```{r echo=FALSE}
+knitr::include_graphics("assets/MAESTRO_usecase.png",error = FALSE)
+
+```
+
+### Required annotations for MAESTRO workflow
+
+The full MAESTRO workflow requires extra annotation and reference files. If you want to take full advantage of the pipeline, please download the following:
+
+* MAESTRO depends on [starsolo](https://github.com/alexdobin/STAR/blob/master/docs/STARsolo.md) for mapping scRNA-seq and [chromap](https://github.com/haowenz/chromap) or [minimap2](https://github.com/lh3/minimap2) for mapping scATAC-seq dataset. Users need to generate **the reference files** for the alignment software and specify the path of the annotations to MAESTRO through command line options. Here, we will provide the pre-built reference files.
+
+For *scRNA-seq*, please download STARsolo index from link [STAR human](http://cistrome.org/~galib/MAESTRO/references/scRNA/Refdata_scRNA_MAESTRO_GRCh38_1.2.2.tar.gz) and [STAR mouse](http://cistrome.org/~galib/MAESTRO/references/scRNA/Refdata_scRNA_MAESTRO_GRCm38_1.2.2.tar.gz). If the sequencing platform is Smart-seq2, please also download RSEM prefix from [RSEM human](http://cistrome.org/~galib/MAESTRO/references/scRNA/Refdata_scRNA_MAESTRO_GRCh38_1.1.0.tar.g) and [RSEM mouse](http://cistrome.org/~galib/MAESTRO/references/scRNA/Refdata_scRNA_MAESTRO_GRCm38_1.1.0.tar.gz).
+  
+For *scATAC-seq*, please download reference file from [human](http://cistrome.org/~galib/MAESTRO/references/scATAC/Refdata_scATAC_MAESTRO_GRCh38_1.1.0.tar.gz) and [mouse](http://cistrome.org/~galib/MAESTRO/references/scATAC/Refdata_scATAC_MAESTRO_GRCm38_1.1.0.tar.gz). If using chromap as mapping tool (which is much faster), please also build the index file using `chromap -i -r ref.fa -o ref.index`.
+
+#### Download index files for GRCh38
+
+```{bash, eval = FALSE}
+mkdir MAESTRO/references
+cd MAESTRO/references/
+tar xvf pbmc8k_fastqs.tar
+
+mkdir scRNA
+cd scRNA/
+wget http://cistrome.org/~galib/MAESTRO/references/scRNA/Refdata_scRNA_MAESTRO_GRCh38_1.2.2.tar.gz
+tar xvzf Refdata_scRNA_MAESTRO_GRCh38_1.2.2.tar.gz
+
+cd ../
+mkdir scATAC
+cd scATAC/
+wget http://cistrome.org/~galib/MAESTRO/references/scATAC/Refdata_scATAC_MAESTRO_GRCh38_1.1.0.tar.gz
+tar xvzf Refdata_scATAC_MAESTRO_GRCh38_1.1.0.tar.gz
+
+#build index for chromap. Only take a few minutes.
+chromap -i -r Refdata_scATAC_MAESTRO_GRCh38_1.1.0/GRCh38_genome.fa -o GRCh38_chromap.index
+```
+
+* MAESTRO utilizes **LISA2** to evaluate the enrichment of transcription factors based on the marker genes from scRNA-seq clusters. If users want to use LISA2, they need to download and install reference data either for [human](/project/dev/alynch/public_data/lisa_data/hg38_1000_2.0.h5) or for [mouse](http://cistrome.org/~alynch/data/lisa_data/mm10_1000_2.0.h5). The input gene set can be constituted of only official gene symbols, only RefSeq ids, only Ensembl ids, only Entrez ids, or a mixture of these identifiers.
+
+#### Download lisa2 data files for GRCh38
+
+```{bash, eval = FALSE}
+cd ../
+mkdir annotation
+cd annotation/
+wget http://cistrome.org/~alynch/data/lisa_data/hg38_1000_2.0.h5
+```
+
+* MAESTRO utilizes **giggle** to identify enrichment of transcription factor peaks in scATAC-seq cluster-specific peaks. By default [giggle](https://github.com/ryanlayer/giggle) is installed in MAESTRO environment. The giggle index for Cistrome database can be downloaded [here](http://cistrome.org/~galib/MAESTRO/references/giggle.all.tar.gz). Users need to download the file and provide the location of the giggle annotation to MAESTRO if want to predict TFs on scATAC-seq.
+
+#### Download giggle annotation files for GRCh38
+
+```{bash, eval = FALSE}
+wget http://cistrome.org/~galib/MAESTRO/references/giggle.all.tar.gz
+tar xvzf giggle.all.tar.gz
+```
+
+### Test data
+We also provide small data sets for users to try out the pipeline (sampling from 10x fastq files). Data can be downloaded from the link [scRNA-seq](http://cistrome.org/~galib/MAESTRO/MAESTRO_samples/rna_pbmc_1k_v3_fastqs_sampling.tar.gz) and [scATAC-seq](http://cistrome.org/~galib/MAESTRO/MAESTRO_samples/atac_pbmc_500_v1_fastqs_sampling.tar.gz).
