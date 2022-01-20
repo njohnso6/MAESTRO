@@ -1,13 +1,36 @@
-# MAESTRO
+# MAESTRO (MACS3 fork version)
 
-![GitHub](https://img.shields.io/github/license/liulab-dfci/MAESTRO)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/liulab-dfci/MAESTRO)
-[![Conda](https://img.shields.io/conda/dn/liulab-dfci/maestro?label=Conda%20downloads)](https://anaconda.org/liulab-dfci/maestro)
+![GitHub](https://img.shields.io/github/license/macs3-project/MAESTRO)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/macs3-project/MAESTRO)
+[![Conda](https://img.shields.io/conda/dn/macs3-project/maestro?label=Conda%20downloads)](https://anaconda.org/macs3-project/maestro)
 [![Docker Pulls](https://img.shields.io/docker/pulls/winterdongqing/maestro)](https://hub.docker.com/repository/docker/winterdongqing/maestro)
-[![Build Status](https://travis-ci.com/liulab-dfci/MAESTRO.svg?branch=master)](https://travis-ci.com/liulab-dfci/MAESTRO)
+[![Build Status](https://travis-ci.com/macs3-project/MAESTRO.svg?branch=master)](https://travis-ci.com/macs3-project/MAESTRO)
 
 
-**MAESTRO**(**M**odel-based **A**nalys**E**s of **S**ingle-cell **T**ranscriptome and **R**egul**O**me) is a comprehensive single-cell RNA-seq and ATAC-seq analysis suit built using [snakemake](https://bitbucket.org/snakemake/snakemake/wiki/Home). MAESTRO combines several dozen tools and packages to create an integrative pipeline, which enables scRNA-seq and scATAC-seq analysis from raw sequencing data (fastq files) all the way through alignment, quality control, cell filtering, normalization, unsupervised clustering, differential expression and peak calling, celltype annotation and transcription regulation analysis. Currently, MAESTRO support [Smart-seq2](https://www.ncbi.nlm.nih.gov/pubmed/24385147), [10x-genomics](https://www.10xgenomics.com/solutions/single-cell/), [Drop-seq](https://www.cell.com/abstract/S0092-8674(15)00549-8), [SPLiT-seq](https://science.sciencemag.org/content/360/6385/176) for scRNA-seq protocols; [microfudics-based](https://www.ncbi.nlm.nih.gov/pubmed/26083756), [10x-genomics](https://www.10xgenomics.com/solutions/single-cell-atac/) and [sci-ATAC-seq](https://science.sciencemag.org/content/348/6237/910) for scATAC-seq protocols.
+**MAESTRO**(**M**odel-based **A**nalys**E**s of **S**ingle-cell
+  **T**ranscriptome and **R**egul**O**me) is a comprehensive
+  single-cell RNA-seq and ATAC-seq analysis suit built using
+  [snakemake](https://bitbucket.org/snakemake/snakemake/wiki/Home). MAESTRO
+  combines several dozen tools and packages to create an integrative
+  pipeline, which enables scRNA-seq and scATAC-seq analysis from raw
+  sequencing data (fastq files) all the way through alignment, quality
+  control, cell filtering, normalization, unsupervised clustering,
+  differential expression and peak calling, celltype annotation and
+  transcription regulation analysis. Currently, MAESTRO support
+  [Smart-seq2](https://www.ncbi.nlm.nih.gov/pubmed/24385147),
+  [10x-genomics](https://www.10xgenomics.com/solutions/single-cell/),
+  [Drop-seq](https://www.cell.com/abstract/S0092-8674(15)00549-8),
+  [SPLiT-seq](https://science.sciencemag.org/content/360/6385/176) for
+  scRNA-seq protocols;
+  [microfudics-based](https://www.ncbi.nlm.nih.gov/pubmed/26083756),
+  [10x-genomics](https://www.10xgenomics.com/solutions/single-cell-atac/)
+  and
+  [sci-ATAC-seq](https://science.sciencemag.org/content/348/6237/910)
+  for scATAC-seq protocols.
+
+This is the MACS3 project fork of MAESTRO. The long-term goal is to
+switch to all python implementation of scRNA+scATAC analysis and move
+from Seurat to Scanpy/Anndata.
 
 <p align="center">
 <img src="./image/MAESTRO_workflow.png"/>
@@ -82,6 +105,8 @@ We are hosting MAESTRO documentation, instruction and tutorials at [MAESTRO Webs
 * Support single-nuclei RNA-seq pipeline.
 * Fix bug in sample initiation subcommand to read fastq with sample id greater than 9.
 * Update MAESTRO documentation to v1.5.1. Add snRNA-seq tutorials. Expand scRNA-seq tutorial with lisa2 TF prediction custom analysis. Add multi-scATAC-seq genome track plot for pseudobulk peaks. Explain multi-samples peak calling parameters.
+### v1.5.2 (MACS3 fork)
+* Temporary release. We will update some documentations and update some dependencies.
 
 ## System requirements
 * Linux/Unix
@@ -106,12 +131,12 @@ $ bash Miniconda3-latest-Linux-x86_64.sh
 And then users can create an isolated environment for MAESTRO and install through the following commands:
 ``` bash
 $ conda config --add channels defaults
-$ conda config --add channels liulab-dfci
+$ conda config --add channels liulab-dfci # for lisa2
 $ conda config --add channels bioconda
 $ conda config --add channels conda-forge
 # To make the installation faster, we recommend using mamba
 $ conda install mamba -c conda-forge
-$ mamba create -n MAESTRO maestro=1.5.1 -c liulab-dfci
+$ mamba create -n MAESTRO maestro=1.5.1 -c macs3-project
 # Activate the environment
 $ conda activate MAESTRO
 ```
@@ -122,7 +147,7 @@ If users already have the processed datasets, like cell by gene or cell by peak 
 ``` bash
 $ R
 > library(devtools)
-> install_github("liulab-dfci/MAESTRO")
+> install_github("macs3-project/MAESTRO")
 ```
 
 ## Citation
