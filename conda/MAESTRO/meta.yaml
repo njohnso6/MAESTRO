@@ -153,6 +153,4 @@ requirements:
 about:
   home: https://github.com/macs3-project/MAESTRO
   license: GPL-3.0
-  summary: MAESTRO(Model-based AnalysEs of Single-cell Transcriptome
-  and RegulOme) is a comprehensive single-cell RNA-seq and ATAC-seq
-  analysis suit built using snakemake. (MACS3 fork)
+  summary: MAESTRO(Model-based AnalysEs of Single-cell Transcriptome and RegulOme) is a comprehensive single-cell RNA-seq and ATAC-seq analysis suit built using snakemake. (MACS3 fork)
