@@ -19,7 +19,7 @@ Remotes: github::immunogenomics/presto@7f63f9606953f8ab643809fad6eb4daea7c471d0,
 	 github::hms-dbmi/pagoda2@v0.1.1,
 	 github::SUwonglab/scABC@v0.1,
 	 github::GreenleafLab/chromVARmotifs@38bed559c1f4770b6c91c80bf3f8ea965da26076,
-	 github::gforge/Gmisc@1.11.0
+	 github::gforge/Gmisc@3.0.0
 VignetteBuilder: knitr
 License: GPL (>=3)
 Encoding: UTF-8

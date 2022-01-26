@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-# @Author: Dongqing Sun
-# @E-mail: Dongqingsun96@gmail.com
-# @Date:   2020-06-12 03:53:45
-# @Last Modified by:   Gali Bai
-# @Last Modified time: 2020-06-15 21:58:56
-
+# Time-stamp: <2022-01-25 19:58:58 Tao Liu>
 
 import sys,os
 # from distutils.core import setup
@@ -18,7 +13,7 @@ except ImportError:
 def main():
     setup(
         name = "MAESTRO",
-        version = "1.5.1",
+        version = "1.5.2",
         package_dir = {'MAESTRO':'MAESTRO'},
         packages = ['MAESTRO'],
         package_data={'MAESTRO':['Snakemake/scRNA/*', 'Snakemake/integrate/*', 'Snakemake/scATAC/*', 'Snakemake/scATAC/rules/*', 'Snakemake/scRNA/rules/*', 'R/*', 'utils/*','annotations/*', 'html/*', '']},
@@ -29,9 +24,9 @@ def main():
         author = "Chenfei Wang, Dongqing Sun, Tao Liu, Changxin Wan, Ming (Tommy) Tang, Gali Bai",
         author_email = "gali.bai@hotmail.com",
         description = "MAESTRO(Model-based AnalysEs of Single-cell Transcriptome and RegulOme) is a comprehensive "
-        "single-cell RNA-seq and ATAC-seq analysis suit built using snakemake.",
+        "single-cell RNA-seq and ATAC-seq analysis suit built using snakemake. (MACS3 fork)",
         license = "GPL-3.0",
-        url = "https://github.com/liulab-dfci/MAESTRO",
+        url = "https://github.com/macs3-project/MAESTRO",
 
         # entry_points = {"console_scripts": ["strap = strap:main"]},
         classifiers = [

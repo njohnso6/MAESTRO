@@ -19,9 +19,8 @@ cd ../
 
 # there are two dependencies in R DESCRIPTION
 # that can't be found in conda-forge or bioconda
-# channel. They are grid and Gmisc
+# channel. They are grid and Gmisc -- Noted by TL
 
 # install MAESTRO/R
 $R -e 'Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true");devtools::install(".", upgrade="never")'
-
 
