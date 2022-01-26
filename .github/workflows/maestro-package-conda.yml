@@ -12,10 +12,10 @@ jobs:
         shell: bash
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.9
+    - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: 3.8
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
@@ -45,7 +45,7 @@ jobs:
     - name: Build package
       run: |
         mkdir bld-dir
-        conda build -q conda/MAESTRO --python=3.9 --output-folder bld-dir
+        conda build -q conda/MAESTRO --python=3.8 --output-folder bld-dir
     - name: Test installing package
       run: |
         # Now add this folder as a highest priority channel
