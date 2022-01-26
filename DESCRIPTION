@@ -1,12 +1,12 @@
 Package: MAESTRO
 Type: Package
-Title: Model-based Analyses of Single-cell Transcriptome and Regulome
-Version: 1.5.1
+Title: Model-based Analyses of Single-cell Transcriptome and Regulome (MACS3 fork)
+Version: 1.5.2
 Date: 2021-03-05
-Author: Chenfei Wang, Dongqing Sun, Tao Liu, Changxin Wan, Ming (Tommy) Tang, Gali Bai
-Maintainer: Dongqing Sun<dongqingsun96@gmail.com>, Gali Bai<gali.bai@hotmail.com>
-Description: MAESTRO is an intergrative analysis pipeline to support downstream analysis of single-cell RNA-seq and single-cell ATAC-seq dataset. MAESTRO provides funtion for quality control, normalization, clustering, differential gene and peak analysis, marker gene based annotation, transcription factor identification using Cistome toolkit, and intergrative analysis for scRNA-seq and scATACseq.
-URL: https://github.com/LiuLab-dfci/MAESTRO
+Author: Chenfei Wang, Dongqing Sun, Tao Liu, Changxin Wan, Ming (Tommy) Tang, Gali Bai, Jiaojiao Zhou
+Maintainer: Dongqing Sun<dongqingsun96@gmail.com>, Gali Bai<gali.bai@hotmail.com>, Tao Liu <vladimir.liu@gmail.com>
+Description: MAESTRO is an intergrative analysis pipeline to support downstream analysis of single-cell RNA-seq and single-cell ATAC-seq dataset. MAESTRO provides funtion for quality control, normalization, clustering, differential gene and peak analysis, marker gene based annotation, transcription factor identification using Cistome toolkit, and intergrative analysis for scRNA-seq and scATACseq. (MACS3 fork)
+URL: https://github.com/macs3-project/MAESTRO
 Depends: R (>= 4.0.2)
 Imports: Seurat (>= 4.0.0), Signac (>= 1.1.1), ggplot2 (>= 3.0.0), ggrepel, cowplot, Matrix (>=
          1.2.14), dplyr, png, RColorBrewer, scales, pheatmap, MAGeCKFlute, DESeq2, Gmisc,
@@ -19,7 +19,7 @@ Remotes: github::immunogenomics/presto@7f63f9606953f8ab643809fad6eb4daea7c471d0,
 	 github::hms-dbmi/pagoda2@v0.1.1,
 	 github::SUwonglab/scABC@v0.1,
 	 github::GreenleafLab/chromVARmotifs@38bed559c1f4770b6c91c80bf3f8ea965da26076,
-	 github::gforge/Gmisc@1.10.0
+	 github::gforge/Gmisc@3.0.0
 VignetteBuilder: knitr
 License: GPL (>=3)
 Encoding: UTF-8

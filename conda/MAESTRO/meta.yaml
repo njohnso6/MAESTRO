@@ -1,15 +1,12 @@
 package:
   name: maestro
-  version: "1.5.1"
+  version: "1.5.2"
 source:
   path: ../../
-# build:
-#   entry_points:
-#     - strap = strap:main
 requirements:
   build:
     - xorg-libxrender
-    - python >=3.7
+    - python >=3.8
     - pip
     - numpy >=1.17.3
     - scipy >=1.4.1
@@ -19,7 +16,7 @@ requirements:
     - snakemake =6.0.2
     - rseqc >=3.0.0
     - star =2.7.6a
-    - chromap =0.1
+    - chromap =0.1.5
     - minimap2 =2.17
     - samtools =1.10
     - bedtools =2.29.2
@@ -82,7 +79,7 @@ requirements:
     - bioconductor-GenomeInfoDb
   run:
     - xorg-libxrender
-    - python >=3.7
+    - python >=3.8
     - numpy >=1.17.3
     - scipy >=1.4.1
     - h5py >=2.10.0
@@ -91,7 +88,7 @@ requirements:
     - snakemake =6.0.2
     - rseqc >=3.0.0
     - star =2.7.6a
-    - chromap =0.1
+    - chromap =0.1.5
     - minimap2 =2.17
     - samtools =1.10
     - bedtools =2.29.2
@@ -154,6 +151,6 @@ requirements:
     - bioconductor-GenomeInfoDb
 
 about:
-  home: https://github.com/liulab-dfci/MAESTRO
+  home: https://github.com/macs3-project/MAESTRO
   license: GPL-3.0
-  summary: MAESTRO(Model-based AnalysEs of Single-cell Transcriptome and RegulOme) is a comprehensive single-cell RNA-seq and ATAC-seq analysis suit built using snakemake.
+  summary: MAESTRO(Model-based AnalysEs of Single-cell Transcriptome and RegulOme) is a comprehensive single-cell RNA-seq and ATAC-seq analysis suit built using snakemake. (MACS3 fork)

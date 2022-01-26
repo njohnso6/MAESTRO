@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="baigal628" />
+
+<meta name="date" content="2021-06-07" />
+
+<title>scATAC-seq custom analysis</title>
+
+<script src="site_libs/header-attrs-2.9/header-attrs.js"></script>
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">MAESTRO 1.5.1</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    scRNA-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="scrna.html">10X PBMC 1k</a>
+    </li>
+    <li>
+      <a href="scrna_stepbystep.html">10X PBMC 1k Custom Analysis</a>
+    </li>
+    <li>
+      <a href="snrna.html">10X snRNA-seq</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    scATAC-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="scatac.html">10X PBMC 500</a>
+    </li>
+    <li>
+      <a href="scatac_stepbystep.html">10X PBMC 500 Custom Analysis</a>
+    </li>
+    <li>
+      <a href="sci_atac.html">sci-ATAC-seq</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    multi-sample scRNA-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="multi-scrna.html">10X multi-sample</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    multi-sample scATAC-seq
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="multi-scatac.html">time-dependent multi-sample</a>
+    </li>
+    <li>
+      <a href="multi-scatac_stepbystep.html">Custom Analysis</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a>
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="https://github.com/liulab-dfci/MAESTRO">Source code</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">scATAC-seq custom analysis</h1>
+<h4 class="author">baigal628</h4>
+<h4 class="date">2021-06-07</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-07-27
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>MAESTRO_documentation/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20201223code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20201223)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20201223code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20201223)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombaigal628MultiSamplescATACseqtree4a7b06feb4cf21a05554efbc3bf8fc9c17b37683targetblank4a7b06fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/baigal628/MultiSample_scATACseq/tree/4a7b06feb4cf21a05554efbc3bf8fc9c17b37683" target="_blank">4a7b06f</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombaigal628MultiSamplescATACseqtree4a7b06feb4cf21a05554efbc3bf8fc9c17b37683targetblank4a7b06fa" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/baigal628/MultiSample_scATACseq/tree/4a7b06feb4cf21a05554efbc3bf8fc9c17b37683" target="_blank">4a7b06f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .RData
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.DS_Store
+    Ignored:    code/.DS_Store
+    Ignored:    data/.DS_Store
+    Ignored:    data/multi-scatac/.DS_Store
+    Ignored:    data/multi-scrna/
+
+Untracked files:
+    Untracked:  .RDataTmp
+    Untracked:  code/snRNA_genelength.R
+    Untracked:  code/snRNA_genelength_TPM.R
+    Untracked:  data/allen/
+    Untracked:  data/multi-scatac/bed/
+    Untracked:  data/multi-scatac/bigwig/GDF7_bed_added.png
+    Untracked:  output/snRNA_TPM_VS_genelength.png
+    Untracked:  output/snRNA_genelengthVSLognormUMI.png
+    Untracked:  output/snRNA_genelengthVSUMI.png
+
+Unstaged changes:
+    Deleted:    MultiSample_scATACseq.Rproj
+    Deleted:    atac_pbmc_500_nextgem.GIGGLE/0.peaks.bed
+    Deleted:    atac_pbmc_500_nextgem.GIGGLE/0.peaks.bed.gz
+    Deleted:    atac_pbmc_500_nextgem.GIGGLE/0.peaks.bed.result.xls
+    Modified:   code/Basic_Operations.R
+    Modified:   pbmc_1k_v3_8k_res.rds
+    Modified:   pbmc_1k_v3_Monocyte_filtered.pdf
+    Modified:   pbmc_1k_v3_Monocyte_top.pdf
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="perform-custom-analysis-from-the-pipeline-output" class="section level2">
+<h2>Perform custom analysis from the pipeline output</h2>
+<p>Although MAESTRO will generate all the analysis results through the snakemake-based workflow, in most cases, users might focus on specific clusters or sub-clusters or want to tune some of the parameters to improve the results. Then users can utilize the stand-alone MAESTRO R package, which has been installed in the MAESTRO conda environment, to perform custom analysis from the processed dataset (peak by cell binary matrix). We will show you how to run through the downstream analysis using the R package step by step.</p>
+</div>
+<div id="step-0.-read-data" class="section level2">
+<h2>Step 0. Read data</h2>
+<p>First users need to read the peak count matrix as well as the gene regulatory potential matrix generated by MAESTRO into the R enviroment. To support the processing of large datasets, in MAESTRO we use <a href="https://support.10xgenomics.com/single-cell-atac/software/pipelines/latest/advanced/h5_matrices">HDF5 format</a> for all the expression, atac-seq peak count and RP tables.</p>
+<pre class="r"><code>library(MAESTRO)</code></pre>
+<pre><code>Registered S3 method overwritten by &#39;cli&#39;:
+  method     from         
+  print.boxx spatstat.geom</code></pre>
+<pre class="r"><code>library(Seurat)</code></pre>
+<pre><code>Attaching SeuratObject</code></pre>
+<pre class="r"><code>library(Signac)</code></pre>
+<pre><code>
+Attaching package: &#39;Signac&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:Seurat&#39;:
+
+    FoldChange</code></pre>
+<pre class="r"><code>pbmc.peak &lt;- Read10X_h5(&#39;./data/scatac/atac_pbmc_500_nextgem_filtered_peak_count.h5&#39;)</code></pre>
+<pre><code>Warning in sparseMatrix(i = indices[] + 1, p = indptr[], x = as.numeric(x =
+counts[]), : &#39;giveCsparse&#39; has been deprecated; setting &#39;repr = &quot;T&quot;&#39; for you</code></pre>
+<pre class="r"><code>pbmc.gene &lt;- Read10X_h5(&#39;./data/scatac/atac_pbmc_500_nextgem_gene_score.h5&#39;)</code></pre>
+<pre><code>Warning in sparseMatrix(i = indices[] + 1, p = indptr[], x = as.numeric(x =
+counts[]), : &#39;giveCsparse&#39; has been deprecated; setting &#39;repr = &quot;T&quot;&#39; for you</code></pre>
+<p>We also support the processed dataset from 10x Cell Ranger pipelines, users can load the peak matrix into R through Seurat package. Then users can generate the gene regulatory score matrix by the following command. See <a href="../Gene_activity_modelling/Gene_activity_modelling.md">tutorial</a> of gene activity modelling for more details.</p>
+<pre class="r"><code>pbmc.peak &lt;- Read10X_h5(&quot;outs/filtered_peak_bc_matrix.h5&quot;)
+pbmc.gene &lt;- ATACCalculateGenescore(pbmc.peaks, organism = &quot;GRCh38&quot;)</code></pre>
+<p><strong>Note:</strong> If MAESTRO R package is not managed through miniconda, users may encounter the following error.</p>
+<p>Error: Python shared library not found, Python bindings not loaded. Use reticulate::install_miniconda() if you’d like to install a Miniconda Python environment.</p>
+<p>It means reticulate R package cannot find the python shared library. If Anaconda has been installed, users just need to specify an alternate version of python, for example:</p>
+<pre class="r"><code>library(reticulate)
+use_python(&quot;/usr/miniconda3/bin/python&quot;, required = TRUE)
+pbmc.gene &lt;- ATACCalculateGenescore(pbmc.peak)</code></pre>
+<p>If users don’t install Miniconda or Anaconda, we recommend to use <code>reticulate::install_miniconda()</code> to install a Miniconda Python environment and specify the version through <code>use_python</code>.</p>
+<div id="step-1.-perform-clustering-analysis-and-differential-peak-calling" class="section level3">
+<h3>Step 1. Perform clustering analysis and differential peak calling</h3>
+<p>We next create a Seurat object using the peak count matrix and perform the clustering analysis as well as differential peak calling for different clusters. <code>ATACRunSeurat()</code> function in MAESTRO integrates multiple functions of Seurat and perform the routine analysis as follows.</p>
+<p><strong>Analysis</strong> * <strong>Dimension reduction:</strong> MAESTRO first performs dimension reduction on the input matrix. As we and others reported <a href="https://science.sciencemag.org/content/348/6237/910/tab-pdf">(Cusanovich et al, Science 2015)</a>, the Latent Semantic Index (LSI) has been widely used in learning the structure of scATAC-seq data. We use LSI as the default dimension reduction method, which has the best performance according to our benchmark. Users can tune the parameters of <code>RunLSI</code> via <code>runlsi.args</code>. For example, users can set <code>runlsi.args = list(n = 30)</code> to define the number of singular values to compute LSI. We also provide PCA as an optional method.<br />
+* <strong>Clustering:</strong> MAESTRO employs the graph-based clustering method in Seurat for scATAC-seq clustering analysis. Please see <a href="https://www.cell.com/cell/pdf/S0092-8674(19)30559-8.pdf">Seurat</a> for the details. Briefly, MAESTRO will build a K-nearest neighbor (KNN) graph using the reduced dimensions from the previous step, and then refine the edge weights between two cells based on the Jaccard similarity of their neighborhoods, which are completed by the <code>FindNeighbors</code> function in Seurat. To cluster the cells, MAESTRO uses the <code>FindClusters</code> function in Seurat, which applies the Louvain algorithm to cluster cells together iteratively. The default clustering resolution for scATAC-seq is set to 0.6, and users can also tune the parameter for different conditions. Besides, extra parameters for <code>FindNeighbors</code> and <code>FindClusters</code> can be passed via <code>findneighbors.args</code> and <code>findclusters.args</code>. For example, users can set <code>findneighbors.args = list(k.param = 25)</code> to define k = 25 for the k-nearest neighbor algorithm. * <strong>UMAP visualization:</strong> UMAP is used to visualize all the single cells. MAESTRO adopts <a href="https://arxiv.org/abs/1802.03426">UMAP</a> to achieve a low dimension embedding, in which similar cells are placed together. To get a better result for visualization, users can tune the parameters of <code>RunUMAP</code> by adding the arguments in <code>ATACRunSeurat</code> function, like <code>ATACRunSeurat(inputMat = pbmc.gene, ..., n.neighbors = 20, min.dist = 0.2)</code>. * <strong>Differential peak calling:</strong> MAESTRO adopts a <a href="https://www.tandfonline.com/doi/abs/10.1080/01621459.1972.10481279">wilcox-test</a> based method to identify the differential peaks for each cluster. The original peak count matrix is scaled and weighed by the total peaks present in each cell to overcome the potential ties in Wilcox-test. It will take 10-20mins to calculate the differential peaks for all the clusters. We provide <code>FindAllMarkersMAESTRO</code> function in MAESTRO, which is adapted from <code>FindAllMarkers</code> of Seurat, to reduce the computational time and memory. Peaks with logFC greater than 0.2, minimum presence faction in cells of 0.1, and p-value less than 1E-5 are identified as differential peaks for each cluster.</p>
+<pre class="r"><code>pbmc.ATAC.res &lt;- ATACRunSeurat(inputMat = pbmc.peak,
+                                 project = &quot;atac_pbmc_500_nextgem&quot;,
+                                 min.c = 50,
+                                 min.p = 500,
+                                 method = &quot;LSI&quot;,
+                                 dims.use = 1:30,
+                                 cluster.res = 0.6,
+                                 only.pos = TRUE,
+                                 peaks.test.use = &quot;presto&quot;,
+                                 peaks.cutoff = 1e-05,
+                                 peaks.pct = 0.1,
+                                 peaks.logfc = 0.2,
+                                 outdir = &quot;./docs/assets/scatac/&quot;)</code></pre>
+<pre><code>Warning: Feature names cannot have underscores (&#39;_&#39;), replacing with dashes
+(&#39;-&#39;)</code></pre>
+<pre><code>LSI analysis ...</code></pre>
+<pre><code>Performing TF-IDF normalization</code></pre>
+<pre><code>Running SVD</code></pre>
+<pre><code>Scaling cell embeddings</code></pre>
+<pre><code>UMAP analysis ...</code></pre>
+<pre><code>Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+To use Python UMAP via reticulate, set umap.method to &#39;umap-learn&#39; and metric to &#39;correlation&#39;
+This message will be shown once per session</code></pre>
+<pre><code>10:36:02 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
+<pre><code>10:36:02 Read 580 rows and found 30 numeric columns</code></pre>
+<pre><code>10:36:02 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
+<pre><code>10:36:02 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
+<pre><code>0%   10   20   30   40   50   60   70   80   90   100%</code></pre>
+<pre><code>[----|----|----|----|----|----|----|----|----|----|</code></pre>
+<pre><code>**************************************************|
+10:36:02 Writing NN index file to temp file /var/folders/bx/3yng1lx579x084wwkjz1xc6c0000gp/T//RtmpH8qMeg/filebb0e38e972da
+10:36:02 Searching Annoy index using 1 thread, search_k = 3000
+10:36:02 Annoy recall = 100%
+10:36:03 Commencing smooth kNN distance calibration using 1 thread
+10:36:04 Initializing from normalized Laplacian + noise
+10:36:04 Commencing optimization for 500 epochs, with 22356 positive edges
+10:36:06 Optimization finished</code></pre>
+<pre><code>Warning: The following arguments are not used: dims1, dims2, dims3, dims4,
+dims5, dims6, dims7, dims8, dims9, dims10, dims11, dims12, dims13, dims14,
+dims15, dims16, dims17, dims18, dims19, dims20, dims21, dims22, dims23, dims24,
+dims25, dims26, dims27, dims28, dims29, dims30</code></pre>
+<pre><code>Warning: The following arguments are not used: dims1, dims2, dims3, dims4,
+dims5, dims6, dims7, dims8, dims9, dims10, dims11, dims12, dims13, dims14,
+dims15, dims16, dims17, dims18, dims19, dims20, dims21, dims22, dims23, dims24,
+dims25, dims26, dims27, dims28, dims29, dims30</code></pre>
+<pre><code>Computing nearest neighbor graph
+Computing SNN</code></pre>
+<pre><code>Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+
+Number of nodes: 580
+Number of edges: 17700
+
+Running Louvain algorithm...
+Maximum modularity in 10 random starts: 0.8328
+Number of communities: 6
+Elapsed time: 0 seconds</code></pre>
+<pre><code>Identify cluster specific peaks ...</code></pre>
+<p><code>ATACRunSeurat()</code> returns a list of a Seurat object <code>ATAC</code> and dataframe <code>peaks</code>. Please see <a href="https://github.com/satijalab/seurat/wiki">Seurat Github wiki</a> for more details of the Seurat object structure. Users can use the <code>str()</code> command to get an intuitive understanding of the object.</p>
+<pre class="r"><code>pbmc.ATAC.res$ATAC</code></pre>
+<pre><code>An object of class Seurat 
+16376 features across 580 samples within 1 assay 
+Active assay: ATAC (16376 features, 16376 variable features)
+ 2 dimensional reductions calculated: lsi, umap</code></pre>
+<pre class="r"><code>head(pbmc.ATAC.res$peaks)</code></pre>
+<pre><code>         p_val avg_logFC pct.1 pct.2    p_val_adj cluster
+1 3.480911e-48 0.5700408 0.538 0.027 4.563023e-44       0
+2 5.572818e-48 0.5424619 0.554 0.031 4.563023e-44       0
+3 4.867950e-46 0.5743353 0.546 0.036 2.657251e-42       0
+4 2.862799e-45 0.5565842 0.515 0.029 1.172030e-41       0
+5 8.140127e-45 0.5222754 0.477 0.018 2.666055e-41       0
+6 1.372764e-44 0.5297140 0.508 0.027 3.746731e-41       0
+                      peak
+1 chr2-241762519-241764351
+2   chr7-38232621-38233409
+3  chr17-47829777-47830462
+4  chr19-51372654-51373498
+5  chr17-49715177-49716212
+6 chr2-231425811-231426595</code></pre>
+<p><img src="assets/scatac/atac_pbmc_500_nextgem_cluster.png" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-atac_pbmc_500_nextgem_cluster">
+Past versions of atac_pbmc_500_nextgem_cluster.png
+</button>
+</p>
+<div id="fig-atac_pbmc_500_nextgem_cluster" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/df0c2882fe04c6abfaa338b9e6d3ff22f473e62c/docs/assets/scatac/atac_pbmc_500_nextgem_cluster.png" target="_blank">df0c288</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="step-2.-annotate-cell-types" class="section level3">
+<h3>Step 2. Annotate cell types</h3>
+<p>We next try to annotate different clusters based on their marker genes. For scATAC, MAESTRO provides two methods to annotate cell types. One is based on inferred gene activity. MAESTRO uses the gene regulatory potential (RP model, see the paper for more details) to quantify gene expression. So, we first need to use <code>ATACAttachGenescore()</code> to pass the gene regulatory potential matrix to the clustering result, and then perform differential gene analysis for each cluster on the gene RPscore matrix and identify the marker genes. We use public immune signatures like <a href="https://www.nature.com/articles/nmeth.3337">CIBERSORT</a> to annotate the clusters. Users can also use their own signatures to annotate the clusters. Cell type information is stored in <code>Object@meta.data$assign.ident</code>.</p>
+<pre class="r"><code>pbmc.ATAC.res$ATAC &lt;- ATACAttachGenescore(ATAC = pbmc.ATAC.res$ATAC, RPmatrix = pbmc.gene)</code></pre>
+<pre><code>Warning: Feature names cannot have underscores (&#39;_&#39;), replacing with dashes
+(&#39;-&#39;)</code></pre>
+<pre><code>Centering and scaling data matrix</code></pre>
+<pre class="r"><code>data(human.immune.CIBERSORT)
+pbmc.ATAC.res$ATAC &lt;- ATACAnnotateCelltype(ATAC = pbmc.ATAC.res$ATAC,
+                                             signatures = human.immune.CIBERSORT,
+                                             min.score = 0.1,
+                                             genes.test.use = &quot;presto&quot;,
+                                             genes.cutoff = 1E-5,
+                                             outdir = &quot;./docs/assets/scatac&quot;)</code></pre>
+<pre><code>Identify cluster specific genes based on RP score ...</code></pre>
+<pre class="r"><code>head(pbmc.ATAC.res$ATAC@meta.data)</code></pre>
+<pre><code>                            orig.ident nCount_ATAC nFeature_ATAC
+AAACTGCAGACTCGGA atac_pbmc_500_nextgem        2682          2682
+AAAGATGCACCTATTT atac_pbmc_500_nextgem        3658          3658
+AAAGATGCAGATACAA atac_pbmc_500_nextgem        6958          6958
+AAAGATGCAGTTACAC atac_pbmc_500_nextgem         862           862
+AAAGGGCTCGCTCTAC atac_pbmc_500_nextgem        6258          6258
+AAATGAGAGTCCCGCA atac_pbmc_500_nextgem        2091          2091
+                 ATAC_snn_res.0.6 seurat_clusters nCount_ACTIVITY
+AAACTGCAGACTCGGA                1               1       2746.8879
+AAAGATGCACCTATTT                4               4       3730.1817
+AAAGATGCAGATACAA                0               0       7009.5097
+AAAGATGCAGTTACAC                3               3        890.4284
+AAAGGGCTCGCTCTAC                4               4       6236.5147
+AAATGAGAGTCCCGCA                1               1       2052.6547
+                 nFeature_ACTIVITY assign.ident assign.score assign.celltype
+AAACTGCAGACTCGGA              5406  Neutrophils    0.3999863     Neutrophils
+AAAGATGCACCTATTT              6807    Monocytes    0.6256015       Monocytes
+AAAGATGCAGATACAA             10878       CD8Tex    0.6780347          CD8Tex
+AAAGATGCAGTTACAC              1815       Others    0.0000000          Others
+AAAGGGCTCGCTCTAC             10355    Monocytes    0.6256015       Monocytes
+AAATGAGAGTCCCGCA              4288  Neutrophils    0.3999863     Neutrophils</code></pre>
+<p><img src="assets/scatac/atac_pbmc_500_nextgem_annotated.png" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-atac_pbmc_500_nextgem_annotated">
+Past versions of atac_pbmc_500_nextgem_annotated.png
+</button>
+</p>
+<div id="fig-atac_pbmc_500_nextgem_annotated" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/d02c8c121faf4bc6e4430cccfe2d34ad9506f3ad/docs/assets/scatac/atac_pbmc_500_nextgem_annotated.png" target="_blank">d02c8c1</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-19
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/30fbad89c063504021ad8704a527bcaee84d24b2/docs/assets/scatac/atac_pbmc_500_nextgem_annotated.png" target="_blank">30fbad8</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-22
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/df0c2882fe04c6abfaa338b9e6d3ff22f473e62c/docs/assets/scatac/atac_pbmc_500_nextgem_annotated.png" target="_blank">df0c288</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Another method <code>ATACAnnotateChromatinAccessibility</code> to annotate scATAC-seq data is based on chromatin accessibility directly. MAESTRO incorporates public bulk chromatin accessibility data (DNase-seq and ATAC-seq) from Cistrome database. All the datesets are clustered into 80 clusters and the cluster identities are determined by the cell-type or tissue type information of datasets within each cluster. For scATAC-seq clusters, MAESTRO utilizes giggle to evaluate the enrichment of bulk chromatin accessibility peaks on cluster-specific peaks from scATAC-seq data. Then the Cistrome cluster identity from the most enriched bulk chromatin accessibility data is used to represent the cell-type annotation for the scATAC-seq cluster. Giggle has been installed in the MAESTRO conda environment. If users only installed the stand-alone R pcakage, please install <a href="https://github.com/ryanlayer/giggle">giggle</a> first. Users need to download the giggle index from <a href="http://cistrome.org/~galib/giggle.all.tar.gz">Cistrome website</a> (<strong>Note:</strong> If the version of MAESTRO is higher than v1.2.0, please update the giggle index to the <a href="http://cistrome.org/~galib/giggle.all.tar.gz">latest</a>), and provide the file location of the index to <code>ATACAnnotateChromatinAccessibility</code>. Cell type annotation based on bulk chromatin accessibility data is stored in <code>Object@meta.data$biological_resource</code>.</p>
+<pre class="r"><code>pbmc.ATAC.res$ATAC &lt;- ATACAnnotateChromatinAccessibility(ATAC = pbmc.ATAC.res$ATAC,
+                                                  peaks = pbmc.ATAC.res$peaks,
+                                                  project = &quot;atac_pbmc_500_nextgem&quot;,
+                                                  giggle.path = &quot;/Users/galib/Downloads/giggle.all&quot;,
+                                                  organism = &quot;GRCh38&quot;)
+
+p &lt;- DimPlot(pbmc.ATAC.res$ATAC, label = TRUE, reduction = &quot;umap&quot;, group.by = &quot;biological_resource&quot;, repel=T, pt.size = 0.5, label.size = 2.5)
+ggsave(file.path(paste0(result$ATAC@project.name, &quot;_CistromeTop_annotated.png&quot;)), p, width=7.5, height=4)</code></pre>
+<p>All the reduction results are stored in <code>Object@reductions</code>. For example, users can use <code>Object@reductions$umap@cell.embeddings</code> to extract the cell embedding result of UMAP for custom plotting. Or users can directly use <code>DimPlot()</code> from Seurat and other functions like <code>theme()</code> from ggplot2 to generate a prettier plot.</p>
+<pre class="r"><code>library(ggplot2)
+library(RColorBrewer)
+p2 &lt;- DimPlot(object = pbmc.ATAC.res$ATAC, label = TRUE, pt.size = 0.15,
+               group.by = &quot;assign.ident&quot;, label.size = 3,
+               cols = brewer.pal(8,&quot;Set2&quot;)) +
+       theme_linedraw() + NoLegend()
+p2</code></pre>
+<p><img src="figure/scatac_stepbystep.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/f083ec51c21b927bcfe237d32577d2fdd2430e7c/docs/figure/scatac_stepbystep.Rmd/unnamed-chunk-11-1.png" target="_blank">f083ec5</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-08
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="step-3.-identify-driver-transcription-regulators" class="section level3">
+<h3>Step 3. Identify driver transcription regulators</h3>
+<p>To identify enriched transcription regulators is crucial to understanding gene regulation in the heterogeneous single-cell populations. MAESTRO utilizes giggle to identify enrichment of transcription factor peaks in scATAC-seq cluster-specific peaks.</p>
+<p>After identifying enriched transcription regulators, MAESTRO also provides the potential target gene list of the top 10 transcription factors for each cluster, which are based on the ChIP-seq profiles from <a href="http://cistrome.org/db/#/">CistromeDB</a>. The target genes will be generated in the <code>project.GIGGLE</code> directory.</p>
+<pre class="r"><code>pbmc.ATAC.tfs &lt;- ATACAnnotateTranscriptionFactor(ATAC = pbmc.ATAC.res$ATAC,
+                                                   peaks = pbmc.ATAC.res$peaks,
+                                                   project = &quot;atac_pbmc_500_nextgem&quot;,
+                                                   giggle.path = &quot;/Users/galib/Downloads/giggle.all&quot;)
+pbmc.ATAC.tfs[[&quot;0&quot;]]</code></pre>
+<p>Besides indentifying TFs for all the clusters, we also support the differential peaks from a single comparison.</p>
+<pre class="r"><code>DefaultAssay(pbmc.ATAC.res$ATAC) = &quot;ATAC&quot;
+de.peakset &lt;- FindMarkersMAESTRO(pbmc.ATAC.res$ATAC, ident.1 = c(0,2,10,12))
+pbmc.ATAC.monocyte.tfs &lt;- ATACAnnotateTranscriptionFactor(ATAC = pbmc.ATAC.res$ATAC,
+                                                            peaks = de.peakset,
+                                                            cluster = c(0,2,10,12),
+                                                            project = &quot;atac_pbmc_500_nextgem&quot;,
+                                                            giggle.path = &quot;&quot;/Users/galib/Downloads/giggle.all&quot;)</code></pre>
+<p>Visualize driver transcription factors for each cluster According to the annotation of the clusters, we know that cluster 4 is Monocytes. Next, we want to visualize the enriched regulators in Monocytes from</p>
+</div>
+<div id="step-4.-visualize-driver-transcription-factors-for-each-cluster" class="section level3">
+<h3>Step 4. Visualize driver transcription factors for each cluster</h3>
+<p>Visualize driver transcription factors for each cluster According to the annotation of the clusters, we know that cluster 4 is Monocytes. Next, we want to visualize the enriched regulators in Monocytes from Step4.</p>
+<p>The output TFs from MAESTRO have already been pre-filtered using TF regulatory potential score.</p>
+<pre class="r"><code>tfs &lt;- sapply(pbmc.ATAC.tfs[[&quot;1&quot;]], function(x) {return(unlist(strsplit(x, split = &quot; | &quot;, fixed = TRUE))[1])})
+p &lt;- VisualizeTFenrichment(TFs = tfs,
+                             cluster.1 = 4,
+                             type = &quot;ATAC&quot;,
+                             SeuratObj = pbmc.ATAC.res$ATAC,
+                             GIGGLE.table = &quot;atac_pbmc_500_nextgem.PredictedTFScore.txt&quot;,
+                             visual.totalnumber = 100,
+                             name = &quot;atac_pbmc_500_nextgem_Monocyte_filtered&quot;)</code></pre>
+<p>If users want to visualize the top factors without filtering using regulatory potential. Please leave the TFs to blank, then the top 10 regulators will be visualized.</p>
+<pre class="r"><code>VisualizeTFenrichment(cluster.1 = 4,
+                             type = &quot;ATAC&quot;,
+                             SeuratObj = pbmc.ATAC.res$ATAC,
+                             GIGGLE.table = &quot;atac_pbmc_500_nextgem_giggle.txt&quot;,
+                             visual.topnumber = 10,
+                             visual.totalnumber = 100,
+                             name = &quot;atac_pbmc_500_nextgem_Monocyte_top&quot;)</code></pre>
+<p>To further filter the regulators, users may want to visualize the expression level of the predicted transcription factors. Here, we use the gene regulatory potential score as the predicted gene expression level. We provide the function for visualize TF/genes regulatory potential using Vlnplot and Umap.</p>
+<pre class="r"><code>VisualizeVlnplot(genes = c(&quot;SPI1&quot;,&quot;RARA&quot;),
+                        type = &quot;ATAC&quot;,
+                        SeuratObj = pbmc.ATAC.res$ATAC,
+                        ncol = 2,
+                        width = 9,
+                        height = 4,
+                        name = &quot;atac_pbmc_500_nextgem_Monocyte&quot;)</code></pre>
+<pre><code>Warning: CombinePlots is being deprecated. Plots should now be combined using
+the patchwork system.</code></pre>
+<p><img src="figure/scatac_stepbystep.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-16-1">
+Past versions of unnamed-chunk-16-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-16-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/71fb9af86c756612a5a5898fbcfbed11cbee6547/docs/figure/scatac_stepbystep.Rmd/unnamed-chunk-16-1.png" target="_blank">71fb9af</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>VisualizeUmap(genes = c(&quot;SPI1&quot;,&quot;RARA&quot;),
+                     type = &quot;ATAC&quot;,
+                     SeuratObj = pbmc.ATAC.res$ATAC,
+                     ncol = 2,
+                     width = 8,
+                     height = 3,
+                     name = &quot;atac_pbmc_500_nextgem_Monocyte&quot;)</code></pre>
+<pre><code>Warning: CombinePlots is being deprecated. Plots should now be combined using
+the patchwork system.</code></pre>
+<p><img src="figure/scatac_stepbystep.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-17-1">
+Past versions of unnamed-chunk-17-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-17-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/baigal628/MultiSample_scATACseq/blob/3e0057c4482bb3cb27d8badd29db34f4ff3f0706/docs/figure/scatac_stepbystep.Rmd/unnamed-chunk-17-1.png" target="_blank">3e0057c</a>
+</td>
+<td>
+baigal628
+</td>
+<td>
+2021-07-13
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Based on the regulatory potential of TFs, we can see that SPI1 is highly expressed in the Monocytes from PBMC, while RARA is generally distributed among all cell-types.</p>
+<p>MAESTRO can also provide a genome browser function <code>ATACViewTrack</code> for visualizing the scATAC-seq signal for different clusters. The fragment file <code>fragments_corrected_count.tsv.gz</code> and its index <code>fragments_corrected_count.tsv.gz.tbi</code> are needed for this function. If users start from the output of 10x Cell Ranger pipeline, <code>fragments.tsv.gz</code> and <code>fragments.tsv.gz.tbi</code> are the substitutes.</p>
+<pre class="r"><code>library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(org.Hs.eg.db)
+txdb = TxDb.Hsapiens.UCSC.hg38.knownGene
+genome = &quot;hg38&quot;
+fragment = &quot;../Mapping/fragments_corrected_count.tsv.gz&quot;
+
+meta_info = data.frame(cell = rownames(pbmc.ATAC.res[[&quot;ATAC&quot;]]@meta.data),
+                       cluster = pbmc.ATAC.res[[&quot;ATAC&quot;]]@meta.data$seurat_clusters,
+                       depth = pbmc.ATAC.res[[&quot;ATAC&quot;]]@meta.data$nCount_ATAC)
+
+ATACViewTrack(gene_name = &quot;SPI1&quot;, downstream = 8000,
+              yaxis_cex = 1,
+              fragment = fragment,
+              grouping = meta_info,
+              tick_label_cex = 1, tick.dist = 5000,
+              track_cols = &quot;blue&quot;,
+              label_cex = 1,
+              minor.tick.dist = 1000, label.margin = -0.6,
+              txdb = txdb,
+              genome = genome)</code></pre>
+</div>
+<div id="step-5.-save-the-project-for-future-analysis" class="section level3">
+<h3>Step 5. Save the project for future analysis</h3>
+<p>Finally, users can save the R project, including the raw data, normalized data, clustering result, and meta information for future analysis.</p>
+<pre class="r"><code>saveRDS(pbmc.ATAC.res, &quot;atac_pbmc_500_nextgem_res.rds&quot;)</code></pre>
+<p>The differential peaks, predicted TFs, and target genes and all the figures have already been saved in the current directory by MAESTRO.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.0 (2021-05-18)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Big Sur 10.16
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] RColorBrewer_1.1-2 ggplot2_3.3.5      Signac_1.2.1       SeuratObject_4.0.2
+[5] Seurat_4.0.1       MAESTRO_1.5.0      workflowr_1.6.2   
+
+loaded via a namespace (and not attached):
+  [1] rappdirs_0.3.3              SnowballC_0.7.0            
+  [3] rtracklayer_1.52.0          scattermore_0.7            
+  [5] tidyr_1.1.3                 bit64_4.0.5                
+  [7] knitr_1.33                  irlba_2.3.3                
+  [9] DelayedArray_0.18.0         data.table_1.14.0          
+ [11] rpart_4.1-15                KEGGREST_1.32.0            
+ [13] RCurl_1.98-1.3              AnnotationFilter_1.16.0    
+ [15] generics_0.1.0              BiocGenerics_0.38.0        
+ [17] GenomicFeatures_1.44.0      callr_3.7.0                
+ [19] cowplot_1.1.1               usethis_2.0.1              
+ [21] RSQLite_2.2.7               EnsDb.Mmusculus.v79_2.99.0 
+ [23] RANN_2.6.1                  future_1.21.0              
+ [25] bit_4.0.4                   spatstat.data_2.1-0        
+ [27] xml2_1.3.2                  lubridate_1.7.10           
+ [29] httpuv_1.6.1                SummarizedExperiment_1.22.0
+ [31] assertthat_0.2.1            xfun_0.24                  
+ [33] hms_1.1.0                   jquerylib_0.1.4            
+ [35] evaluate_0.14               promises_1.2.0.1           
+ [37] fansi_0.5.0                 restfulr_0.0.13            
+ [39] progress_1.2.2              caTools_1.18.2             
+ [41] dbplyr_2.1.1                igraph_1.2.6               
+ [43] DBI_1.1.1                   htmlwidgets_1.5.3          
+ [45] sparsesvd_0.2               spatstat.geom_2.2-0        
+ [47] stats4_4.1.0                purrr_0.3.4                
+ [49] ellipsis_0.3.2              RSpectra_0.16-0            
+ [51] dplyr_1.0.7                 backports_1.2.1            
+ [53] biomaRt_2.48.1              deldir_0.2-10              
+ [55] MatrixGenerics_1.4.0        vctrs_0.3.8                
+ [57] Biobase_2.52.0              remotes_2.4.0              
+ [59] ensembldb_2.16.0            ROCR_1.0-11                
+ [61] abind_1.4-5                 cachem_1.0.5               
+ [63] withr_2.4.2                 ggforce_0.3.3              
+ [65] presto_1.0.0                checkmate_2.0.0            
+ [67] sctransform_0.3.2           GenomicAlignments_1.28.0   
+ [69] prettyunits_1.1.1           goftest_1.2-2              
+ [71] cluster_2.1.2               lazyeval_0.2.2             
+ [73] crayon_1.4.1                hdf5r_1.3.3                
+ [75] labeling_0.4.2              pkgconfig_2.0.3            
+ [77] slam_0.1-48                 tweenr_1.0.2               
+ [79] GenomeInfoDb_1.28.0         nlme_3.1-152               
+ [81] pkgload_1.2.1               ProtGenerics_1.24.0        
+ [83] nnet_7.3-16                 devtools_2.4.2             
+ [85] rlang_0.4.11                globals_0.14.0             
+ [87] lifecycle_1.0.0             miniUI_0.1.1.1             
+ [89] filelock_1.0.2              BiocFileCache_2.0.0        
+ [91] rprojroot_2.0.2             polyclip_1.10-0            
+ [93] matrixStats_0.59.0          lmtest_0.9-38              
+ [95] Matrix_1.3-4                ggseqlogo_0.1              
+ [97] zoo_1.8-9                   base64enc_0.1-3            
+ [99] whisker_0.4                 ggridges_0.5.3             
+[101] processx_3.5.2              png_0.1-7                  
+[103] viridisLite_0.4.0           rjson_0.2.20               
+[105] bitops_1.0-7                KernSmooth_2.23-20         
+[107] Biostrings_2.60.1           blob_1.2.1                 
+[109] stringr_1.4.0               forestplot_1.10.1          
+[111] parallelly_1.26.0           jpeg_0.1-8.1               
+[113] S4Vectors_0.30.0            scales_1.1.1               
+[115] memoise_2.0.0               magrittr_2.0.1             
+[117] plyr_1.8.6                  ica_1.0-2                  
+[119] gplots_3.1.1                zlibbioc_1.38.0            
+[121] compiler_4.1.0              Gmisc_1.10.0               
+[123] BiocIO_1.2.0                fitdistrplus_1.1-5         
+[125] Rsamtools_2.8.0             cli_3.0.0                  
+[127] XVector_0.32.0              listenv_0.8.0              
+[129] patchwork_1.1.1             pbapply_1.4-3              
+[131] ps_1.6.0                    htmlTable_2.2.1            
+[133] Formula_1.2-4               MASS_7.3-54                
+[135] mgcv_1.8-36                 tidyselect_1.1.1           
+[137] stringi_1.6.2               highr_0.9                  
+[139] yaml_2.2.1                  latticeExtra_0.6-29        
+[141] ggrepel_0.9.1               grid_4.1.0                 
+[143] sass_0.4.0                  fastmatch_1.1-0            
+[145] EnsDb.Hsapiens.v86_2.99.0   tools_4.1.0                
+[147] future.apply_1.7.0          parallel_4.1.0             
+[149] rstudioapi_0.13             foreign_0.8-81             
+[151] lsa_0.73.2                  git2r_0.28.0               
+[153] gridExtra_2.3               farver_2.1.0               
+[155] Rtsne_0.15                  digest_0.6.27              
+[157] shiny_1.6.0                 qlcMatrix_0.9.7            
+[159] Rcpp_1.0.6                  GenomicRanges_1.44.0       
+[161] later_1.2.0                 RcppAnnoy_0.0.18           
+[163] httr_1.4.2                  AnnotationDbi_1.54.1       
+[165] colorspace_2.0-2            XML_3.99-0.6               
+[167] fs_1.5.0                    tensor_1.5                 
+[169] reticulate_1.20             IRanges_2.26.0             
+[171] splines_4.1.0               uwot_0.1.10                
+[173] RcppRoll_0.3.0              spatstat.utils_2.2-0       
+[175] sessioninfo_1.1.1           plotly_4.9.4.1             
+[177] xtable_1.8-4                jsonlite_1.7.2             
+[179] testthat_3.0.3              R6_2.5.0                   
+[181] Hmisc_4.5-0                 pillar_1.6.1               
+[183] htmltools_0.5.1.1           mime_0.11                  
+[185] glue_1.4.2                  fastmap_1.1.0              
+[187] BiocParallel_1.26.0         codetools_0.2-18           
+[189] pkgbuild_1.2.0              utf8_1.2.1                 
+[191] lattice_0.20-44             bslib_0.2.5.1              
+[193] spatstat.sparse_2.0-0       tibble_3.1.2               
+[195] curl_4.3.2                  leiden_0.3.8               
+[197] gtools_3.9.2                survival_3.2-11            
+[199] rmarkdown_2.9               docopt_0.7.1               
+[201] desc_1.3.0                  munsell_0.5.0              
+[203] GenomeInfoDbData_1.2.6      reshape2_1.4.4             
+[205] gtable_0.3.0                spatstat.core_2.2-0        </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

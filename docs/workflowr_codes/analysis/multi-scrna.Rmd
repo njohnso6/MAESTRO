@@ -1,0 +1,223 @@
+---
+title: "multi-scrna"
+author: "baigal628"
+date: "2021-06-20"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+In this example, we will be analyzing two scRNA-seq datasets together using PBMC data freely available from 10X Genomics. The raw dataset can be downloaded from the 10X Genomics website. We will show you how to run through the whole MAESTRO pipeline from the raw sequencing fastq files to the final results.
+
+
+## Run MAESTRO pipeline
+
+
+### Step 0. Download the data and prepare the environment
+
+Please download the raw data from 10X genomics website.
+
+```{bash, eval=FALSE}
+$ mkdir data/multi-scrna
+$ cd data/multi-scrna
+
+$ wget https://cf.10xgenomics.com/samples/cell-exp/3.0.0/pbmc_1k_v3/pbmc_1k_v3_fastqs.tar
+$ tar xvf pbmc_1k_v3_fastqs.tar
+
+$ wget https://cg.10xgenomics.com/samples/cell-exp/3.0.2/5k_pbmc_v3/5k_pbmc_v3_fastqs.tar
+$ tar xvf 5k_pbmc_v3_fastqs.tar
+```
+
+Before running MAESTRO, users need to activate the MAESTRO environment.
+
+```{bash, eval=FALSE}
+$ conda activate MAESTRO
+```
+
+### Step 1. Configure the MAESTRO workflow
+
+Initialize the MAESTRO scRNA-seq workflow using MAESTRO scrna-init command. This will install a Snakefile and a config file in this directory.
+
+```{bash, eval=FALSE}
+$ MAESTRO scrna-init \
+--platform 10x-genomics --species GRCh38 \
+--cores 32 --rseqc --directory multi-scrna \
+--mergedname 10X_multi \
+--count-cutoff 1000 --gene-cutoff 500 --cell-cutoff 10 \
+--mapindex references/Refdata_scRNA_MAESTRO_GRCh38_1.2.2/GRCh38_STAR_2.7.6a \
+--whitelist references/whitelist/3M-february-2018.txt \
+--barcode-start 1 --barcode-length 16 --umi-start 17 --umi-length 12 \
+--lisadir annotation/hg38_1000_2.0.h5 \
+--signature human.immune.CIBERSORT
+```
+
+To get a full description of command-line options, please use the command
+
+```{bash, eval=FALSE}
+$ MAESTRO scrna-init -h
+```
+
+#### Here we list all the arguments and their description.
+
+**Input files arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--platform` | {10x-genomics,Dropseq,Smartseq2} Platform of single cell RNA-seq. DEFAULT: 10x-genomics.
+`--sample-file` | JSON file with sample file information.
+`--fastq-barcode` | Specify the barcode fastq file, only for the platform of 'Dropseq'. If there are multiple pairs of fastq, please provide a comma-separated list of barcode fastq files. For example, `--fastq-barcode test1_1.fastq,test2_1.fastq`.
+`--fastq-transcript` | Specify the transcript fastq file, only for the platform of 'Dropseq'.
+`--species` | {GRCh38,GRCm38} Specify the genome assembly (GRCh38 for human and GRCm38 for mouse). DEFAULT: GRCh38.
+
+**Running and output arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--cores` | The number of cores to use. DEFAULT: 10.
+`--rseqc` | Whether or not to run RSeQC. If set, the pipeline will include the RSeQC part and then takes a longer time. By default (not set), the pipeline will skip the RSeQC part.
+`--directory` | Path to the directory where the workflow shall be initialized and results shall be stored. DEFAULT: MAESTRO.
+`--mergedname` | Prefix of merged output files. DEFAULT: All_sample.
+`--outprefix` | Prefix of output files. Only required for platform of 'Smartseq2'. DEFAULT: MAESTRO.
+
+**Quality control arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--count-cutoff` | Cutoff for the number of count in each cell. DEFAULT: 1000.
+`--gene-cutoff` | Cutoff for the number of genes included in each cell. DEFAULT: 500.
+`--cell-cutoff` | Cutoff for the number of cells covered by each gene. DEFAULT: 10.
+
+**Reference genome arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--mapindex` | Genome index directory for STAR. Users can just download the index file for [human](http://cistrome.org/~galib/MAESTRO/references/scRNA/Refdata_scRNA_MAESTRO_GRCh38_1.2.2.tar.gz) and [mouse](http://cistrome.org/~galib/MAESTRO/references/scRNA/Refdata_scRNA_MAESTRO_GRCm38_1.2.2.tar.gz) from CistromeDB and decompress them. Then specify the index directory for STAR, for example, `--mapindex Refdata_scRNA_MAESTRO_GRCh38_1.1.0/GRCh38_STAR_2.7.3a`.
+`--rsem` | The prefix of transcript references for RSEM used by rsem-prepare-reference (Only required when the platform is Smartseq2). Users can directly download the reference file for [human](http://cistrome.org/~galib/MAESTRO/references/scRNA/Refdata_scRNA_MAESTRO_GRCh38_1.1.0.tar.gz) and [mouse](http://cistrome.org/~galib/MAESTRO/references/scRNA/Refdata_scRNA_MAESTRO_GRCm38_1.1.0.tar.gz) from CistromeDB and decompress them. Then specify the prefix for RSEM, for example, `--rsem Refdata_scRNA_MAESTRO_GRCh38_1.1.0/GRCh38_RSEM_1.3.2/GRCh38`.
+
+**Barcode arguments, for platform of 'Dropseq' or '10x-genomics':**
+
+Arguments  |  Description
+---------  |  -----------
+`--whitelist` | If the platform is 'Dropseq' or '10x-genomics', please specify the barcode library (whitelist) so that STARsolo can do the error correction and demultiplex of cell barcodes. The 10X Chromium whitelist file can be found inside the CellRanger distribution. Please make sure that the whitelist is compatible with the specific version of the 10X chemistry: V2 or V3. For example, in CellRanger 3.1.0, the V2 whitelist is 'cellranger-3.1.0/cellranger-cs/3.1.0/lib/python/cellranger/barcodes/737K-august-2016.txt'. The V3 whitelist is 'cellranger-3.1.0/cellranger-cs/3.1.0/lib/python/cellranger/barcodes/3M-february-2018.txt'.
+`--barcode-start` | The start site of each barcode. DEFAULT: 1.
+`--barcode-length` | The length of cell barcode. For 10x-genomics, the length of barcode is 16. DEFAULT: 16.
+`--umi-start` | The start site of UMI. DEFAULT: 17.
+`--umi-length` | The length of UMI. For 10x-genomics, the length of V2 chemistry is 10. For 10X V3 chemistry, the length is 12. DEFAULT: 10.
+`--trimR1` | Whether or not to run the R1 file. If set, the pipeline will include the trim off anything after the R1 reads past barcode information. Only necessary if reads were sequenced past these barcodes, by default not set.
+
+**Regulator identification arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--lisadir` | Path to the LISA data files. Please download LISA's required data from cistrome.org: [human](http://cistrome.org/~alynch/data/lisa_data/hg38_1000_2.0.h5) and [mouse](http://cistrome.org/~alynch/data/lisa_data/mm10_1000_2.0.h5). The latest version of [LISA2](https://github.com/liulab-dfci/lisa2) was recently released to largely decrease processing time on multiple gene lists. Please check out for detailed information.
+
+**Cell signature arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--signature` | Cell signature file used to annotate cell types. MAESTRO provides several sets of built-in cell signatures. Users can choose from ['human.immune.CIBERSORT', 'mouse.brain.ALLEN', 'mouse.all.facs.TabulaMuris', 'mouse.all.droplet.TabulaMuris']. Custom cell signatures are also supported. In this situation, users need to provide the file location of cell signatures, and the signature file is tab-separated without header. The first column is cell type, and the second column is signature gene. DEFAULT: human.immune.CIBERSORT.
+
+
+### Step 2. Configure the samples.json file
+
+In the project directory, we will next run `MAESTRO samples-init` subcommand to configure samples.json file.
+
+```{bash, eval=FALSE}
+$ cd multi-scrna/
+
+$ MAESTRO samples-init --assay_type scrna --platform 10x-genomics --data_typ fastq --data_dir /single-cell/MAESTRO/test/tutorial/data/multi-scrna
+
+```
+
+To get a full description of command-line options, please use the command
+```{bash, eval=FALSE}
+MAESTRO samples-init -h
+```
+
+**Input files arguments:**
+Arguments  |  Description
+---------  |  -----------
+`--assay_type` | {scrna,scatac} choose the type of assays.
+`--platform` | {10x-genomics,sci-ATAC-seq,microfluidic} choose the type of sequencing platform
+`--data_type` | {fastq,fragment,bam} choose the type of input data.
+`--data_dir` |  the FULL path to the input file folder.
+
+Once configured, you will find a samples.json file in the current project directory:
+
+```{bash, eval=FALSE}
+cat samples.json
+
+{
+    "5k_pbmc_v3": {
+        "I1": [
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L001_I1_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L002_I1_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L003_I1_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L004_I1_001.fastq.gz"
+        ],
+        "R1": [
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L001_R1_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L002_R1_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L003_R1_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L004_R1_001.fastq.gz"
+        ],
+        "R2": [
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L001_R2_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L002_R2_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L003_R2_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/5k_pbmc_v3_S1_L004_R2_001.fastq.gz"
+        ]
+    },
+    "pbmc_1k_v3": {
+        "I1": [
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/pbmc_1k_v3_S1_L001_I1_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/pbmc_1k_v3_S1_L002_I1_001.fastq.gz"
+        ],
+        "R1": [
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/pbmc_1k_v3_S1_L001_R1_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/pbmc_1k_v3_S1_L002_R1_001.fastq.gz"
+        ],
+        "R2": [
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/pbmc_1k_v3_S1_L001_R2_001.fastq.gz",
+            "/single-cell/MAESTRO/test/tutorial/data/multi-scrna/pbmc_1k_v3_S1_L002_R2_001.fastq.gz"
+        ]
+    }
+}
+```
+
+### Step 3. Run snakemake pipeline
+
+Before running the workflow, please check the `config.yaml` and see if it is configured correctly. Once `config.yaml` is configured, users can use snakemake to run the workflow.
+
+```{bash, eval=FALSE}
+$ snakemake -np
+
+$ nohup snakemake -j 32 > run.out &
+
+```
+
+
+### Step 4. Understand the final output files
+
+The whole pipeline in this example takes about X hours with 12 cores. If MAESTRO runs successfully, an output folder will contain several useful outputs as described below.
+
+```{bash,eval = FALSE}
+$ ls Result
+Analysis  Benchmark  Log  QC  Report  STAR
+```
+
+#### Output files
+* **STAR/:**
+The `STAR` directory contains all the mapping and analysis files generated by `STAR` normal (Smartseq2) or solo mode (10x-genomics or Dropseq). For solo mode, `Solo.out/Gene/` stores raw and filtered count matrix. In MAESTRO pipeline, raw count matrix is used for a further filter according to quality control arguments like `--count-cutoff` `--gene-cutoff` and `--cell-cutoff`.
+* **QC/:**
+The `QC` directory contains quality control analysis results of scRNA-seq data, including the filtered count matrix `outprefix_filtered_gene_count.h5` and RSeQC results (if `--rseqc` is set).
+* **Analysis/:**
+The `Analysis` directory contains a Seurat R object, as well as clustering result, cell type annotation result and driver transcription factor identification result, which we will introduce in the step-by-step analysis.
+* **Benchmark/:**
+The `Benchmark` directory stores benchmark files for all rules in Snakefile, each of which contains a tab-separated table of run times and memory usage in MiB.
+* **Log/:**
+The Log directory contains the log files generated in the pipeline analysis.
+* **Report/:**
+Contain the `{outprefix}_scRNA_report.html` file summarizes all the results in an HTML based document. The multi-sample summary report can be found [here](http://cistrome.org/~galib/MAESTRO/MAESTRO_report/10x_multi_scRNA_report.html).

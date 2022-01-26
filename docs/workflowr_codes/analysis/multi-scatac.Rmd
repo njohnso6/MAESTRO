@@ -1,0 +1,310 @@
+---
+title: "multi-sample scATAC-seq"
+author: "Gali Bai"
+date: "6/6/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+MAESTRO multi-sample scATAC-seq function is the extension of the scATAC-seq pipeline. By specifying different merging points, users can choose either to call bulk peaks or to call peaks by each sample individually. At the end of each workflow, users will obtain both individual peak/gene matrix and merged peak/gene matrix. Each merging point has been shown in the below flow chart. The downstream analysis will then be conducted based on the output matrix. After collecting clustering information, the multi-sample pipeline will also split the fragment file by samples and clusters. This step was developed to facilitate the comparison between samples within each cluster.
+
+```{r echo=FALSE}
+knitr::include_graphics("assets/flowchart.png", error = FALSE)
+```
+
+## Tutorial: PBMC scATAC-seq in time-Dependent Sampling Studies
+
+[Paper](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02032-0)\
+[Data Source](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA545828&o=assay_type_s%3Aa)
+
+
+### Step0. Data Preparation
+
+
+**Create a list of accessions**
+
+```{bash, eval=FALSE}
+$ touch SraAccList.txt
+$ nano SraAccList.txt
+```
+
+**Copy the following accession numbers in SraAccList.txt:**
+```{bash, eval=FALSE}
+$ mkdir data
+$ cd data
+
+$ touch SraAccList.txt
+$ nano SraAccList.txt
+
+#copy the following accession numbers
+SRR11614703
+SRR11614704
+SRR11614705
+SRR11614706
+SRR11614707
+SRR11614708
+```
+
+
+```{bash, eval=FALSE}
+#Install sratoolkit through conda
+$ conda install -c bioconda sra-tools
+
+#Split .sra to .fastq.gz
+$ cat SraAccList.txt | while read i
+  do
+    time fastq-dump --gzip -split-files ${i}
+    echo "** ${i}.sra to fastq done **"
+  done
+
+#Rename to 10X format
+$ cat SraAccList.txt | while read i
+  do
+    mv ${i}_1*.gz ${i}_S1_L001_R1_001.fastq.gz
+    mv ${i}_2*.gz ${i}_S1_L001_R3_001.fastq.gz
+    mv ${i}_3*.gz ${i}_S1_L001_R2_001.fastq.gz
+  done
+
+#I renamed each file based on sample information (Optional)
+$ mv SRR11614703_S1_L001_R1_001.fastq.gz CLL0_S1_L001_R1_001.fastq.gz
+```
+
+### Step 1. Configure the MAESTRO workflow
+Initialize the MAESTRO scATAC-seq workflow using `MAESTRO scATAC-init` command. This will install a Snakefile and a config file in this directory. Here we take the 10X PBMC and CLL data as an example. Considering MAESTRO provides built-in immune cell markers, it's recommended to choose the `RP-based` cell-type annotation strategy. If the data is not immune-related, users can choose to provide their own marker gene list, or choose to annotate cell types through the `peak-based` method (see the following argument description for more details), or they can directly skip the annotation step by not setting `--annotation`.
+
+```{bash, eval=FALSE}
+$ MAESTRO scatac-init --batch --bulk_peaks --downsample \
+--target_reads 5000000 --input_path /single-cell/MAESTRO/test/tutorial/data/time_data \
+--gzip --platform 10x-genomics --format fastq --species GRCh38 \
+--deduplication cell-level --mapping chromap \
+--giggleannotation /single-cell/annotations/giggle.all/ \
+--fasta /single-cell/references/Refdata_scATAC_MAESTRO_GRCh38_1.1.0/GRCh38_genome.fa \
+--index /single-cell/references/chromap/GRCh38_chromap.index \
+--whitelist /single-cell/references/whitelist/737K-cratac-v1.txt \
+--cores 16 --directory multi-scatac-chromap \
+--annotation --method RP-based --signature human.immune.CIBERSORT \
+--clusterpeak --shortpeak \
+--rpmodel Enhanced \
+--peak_cutoff 100 --count_cutoff 1000 --frip_cutoff 0.2 --cell_cutoff 500
+```
+
+To get a full description of command-line options, please use the command
+
+```{bash, eval=FALSE}
+$ MAESTRO scatac-init -h
+```
+
+#### Here we list all the arguments and their description.
+
+**multi-sample processing parameters:**
+
+Arguments  |  Description
+---------  |  -----------
+`--batch ` | If set as true, multi-sample pipeline will be initiated. Users can either choose to go through consensus-peaks path or bulk-peaks path (illustrated in workflow above), which are mutually exclusive. A count matrix for each sample will be produced based on the merged peak set.
+`--consensus_peaks` | If true, --batch needs to be also set as true. Users can define whether to merge consensus peaks from each sample. In this way, MAESTRO will call peaks on each sample individually first and merge consensus peaks from all samples. Users should also set number of cutoff_samples to define the consensus (i.e. peaks called in >= cutoff_samples).
+`--cutoff_samples` | Minimum number of samples to present consensus peaks. The peaks present in at least cutoff_samples will be kept.
+`--bulk_peaks` | For multi-samples from the same experiment, if set as true, peaks will be called after merging all bam file. Bulk_peaks and consensus_peaks are mutually exclusive.
+`--downsample` | {True,False} For deeply sequenced samples, bam files can be downsampled to a certain number of reads (target_reads) to get peak set. Effective only when bulk_peaks is true. 
+`--target_reads` | Number of reads to be kept in downsampling. If the sample has fewer than the target_reads, the original number of reads will be kept. Effective only when down_sample is true.
+
+**Input files arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--input_path` | Path to the input fastq files.
+`--gzip` | Set as True if the input files are gzipped.
+`--species` | {GRCh38,GRCm38} Specify the genome assembly (GRCh38 for human and GRCm38 for mouse). DEFAULT: GRCh38.
+`--platform` | {10x-genomics,sci-ATAC-seq} Platform of single cell ATAC-seq. DEFAULT: 10x-genomics.
+`--format` | {fastq,bam,fragments} The format of input files. Users can start with sequencing fastq files, bam files with CB tag or fragments.tsv.gz file generated by CellRanger ATAC. If the platform is 10x-genomics, users can start with sequencing fastq files, bam files with CB tag or fragments.tsv.gz file generated by CellRanger ATAC. If the platform is sci-ATAC-seq, users can start with sequencing fastq files, bam files with CB tag.
+`--mapping` | {chromap,minimap2} Choose the aligment tool for scATAC-seq from either chromap or minimap2. DEFAULT: chromap.
+`--deduplication` | {cell-level,bulk-level} deduplication level: cell-level or bulk-level.
+
+**Reference genome arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--giggleannotation` | Path of the giggle annotation file required for regulator identification. Please download the annotation file from [here](http://cistrome.org/~galib/MAESTRO/references/giggle.all.tar.gz) and decompress it..
+`--fasta` | Genome fasta file for minimap2. Users can just download the fasta file for [human](http://cistrome.org/~galib/MAESTRO/references/scATAC/Refdata_scATAC_MAESTRO_GRCh38_1.1.0.tar.gz) and [mouse](http://cistrome.org/~galib/MAESTRO/references/scATAC/Refdata_scATAC_MAESTRO_GRCm38_1.1.0.tar.gz) from CistromDB and decompress them. For example, `--fasta Refdata_scATAC_MAESTR O_GRCh38_1.1.0/GRCh38_genome.fa`.
+`--index` | Path of the reference index file for chromap. Users need to build the index file for the reference using command $ chromap -i -r ref.fa -o index.
+
+**Barcode library arguments, only for the platform of 'sci-ATAC-seq':**
+
+Arguments  |  Description
+---------  |  -----------
+`--whitelist` | If the platform is 'sci-ATAC-seq' or '10x-genomics', please specify the barcode library (whitelist) so that the pipeline can correct cell barcodes with 1 base mismatched. Otherwise, the pipeline will automatically output the barcodes with enough read count (>1000). The 10X Chromium whitelist file can be found inside the CellRanger-ATAC distribution. For example, in CellRanger-ATAC 1.1.0, the whitelist is 'cellranger-atac-1.1.0/cellranger-atac-cs/1.1.0/lib/python/barcodes/737K-cratac-v1.txt'.
+
+**Output arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--cores` | The number of cores to use. DEFAULT: 8.
+`--directory` | Path to the directory where the workflow shall be initialized and results shall be stored. DEFAULT: MAESTRO.
+
+**Cell-type annotation arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--annotation` | Whether or not to perform cell-type annotation. By default (not set), MAESTRO will skip the step of cell-type annotation. If set, please specify the method of cell-type annotation through `--method`.
+`--method` | {RP-based,peak-based,both} Method to annotate cell types. MAESTRO provides two strategies to annotate cell types for scATAC-seq data. Users can choose from 'RP-based' and 'peak-based', or choose to run both of them. One is based on gene regulatory potential predicted by RP model. Another is based on the bulk chromatin accessibility data from Cistrome database. If 'RP-based' is set, MAESTRO performs the cell-type annotation using the gene regulatory potential to represent gene expression, and the logFC of gene regulatory potential between one cluster and all the other cells is used to calculate the gene signature scores. If 'peak-based' is set, MAESTRO utilizes GIGGLE to evaluate the enrichment of bulk chromatin accessibility peaks on cluster-specific peaks from scATAC-seq data, and then transfers the Cistrome cluster identity from the most enriched bulk chromatin accessibility data as the cell-type annotation for the scATAC-seq cluster. See the MAESTRO paper for more details. DEFAULT: RP-based.
+`--signature` |Cell signature file used to annotate cell types (required when method is set as 'RP-based'). MAESTRO provides several sets of built-in cell signatures. Users can choose from ['human.immune.CIBERSORT', 'mouse.brain.ALLEN', 'mouse.all.facs.TabulaMuris', 'mouse.all.droplet.TabulaMuris']. Custom cell signatures are also supported. In this situation, users need to provide the file location of cell signatures, and the signature file is tab-seperated without header. The first column is cell type, and the second column is signature gene. DEFAULT: human.immune.CIBERSORT.
+
+**Customized peak arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--custompeak` | Whether or not to provide custom peaks. If set, users need to provide the file location of peak file through `--custompeak-file` and then MAESTRO will merge the custom peak file and the peak file called from all fragments using MACS2. By default (not set), the pipeline will use the peaks called using MACS2.
+`--custompeak-file` | If `--custompeak` is set, please provide the file location of custom peak file. The peak file is BED formatted with tab-separated. The first column is the chromosome, the second is chromStart, and the third is chromEnd.
+`--shortpeak` | Whether or not to call peaks from short fragments (shorter than 150bp). If set, MAESTRO will merge the peaks called from all fragments and those called from short fragments, and then use the merged peak file for further analysis. If not (by default), the pipeline will only use peaks called from all fragments.
+`--clusterpeak` | Whether or not to call peaks by cluster. If set, MAESTRO will split the bam file according to the clustering result, and then call peaks for each cluster. By default (not set), MAESTRO will skip this step.
+
+**Gene score arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--rpmodel` | {Simple,Enhanced} The RP model to use to calaculate gene score. For each gene, simple model sums over the impact of all regulatory elements within the up/dowm-stream of TSS. On the basis of simple model, enhanced model gives the regulatory elements within the exon region a higher weight, and also excludes the regulatory elements overlapped with another gene (the promoter and exon of a nearby gene). See the MAESTRO paper for more details. DEFAULT: Enhanced.
+`--genedistance` | Gene score decay distance, could be optional from 1kb (promoter-based regulation) to 10kb (enhancer-based regulation). DEFAULT: 10000.
+
+**Quality control arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--peak-cutoff` |  Minimum number of peaks included in each cell. DEFAULT: 100.
+`--count-cutoff` | Cutoff for the number of count in each cell. DEFAULT: 1000.
+`--frip-cutoff` | Cutoff for fraction of reads in promoter in each cell. DEFAULT: 0.2.
+`--cell-cutoff` | Minimum number of cells covered by each peak. DEFAULT: 10.
+
+### Step 2. Configure samples.json file
+
+In the project directory, we will next run `MAESTRO samples-init` subcommand to configure samples.json file. The purpose of this step is let MAESTRO read the right format and path of input data.
+
+```{bash, eval=FALSE}
+$ cd multi-scatac-chromap/
+
+$ MAESTRO samples-init --assay_type scatac --platform 10x-genomics --data_type fastq --data_dir /single-cell/MAESTRO/test/tutorial/data/time_data
+```
+
+To get a full description of command-line options, please use the command
+```{bash, eval=FALSE}
+MAESTRO samples-init -h
+```
+
+
+**Input files arguments:**
+
+Arguments  |  Description
+---------  |  -----------
+`--assay_type` | {scrna,scatac} choose the type of assays.
+`--platform` | {10x-genomics,sci-ATAC-seq,microfluidic} choose the type of sequencing platform.
+`--data_type` | {fastq,fragment,bam} choose the type of input data. When using fastq format as input, MAESTRO can only recognize the 10X-like naming: `[Sample Name]_S1_L00[Lane Number]_[Read Type]_001.fastq.gz`.
+`--data_dir` | the full path to the input file folder.
+
+
+Once configured, you will find a samples.json file in the current project directory:
+
+```{bash, eval=FALSE}
+$ cat samples.json
+
+{
+    "CLL0": {
+        "R1": [
+            "/MAESTRO/test/tutorial/data/time_data/CLL0_S1_L001_R1_001.fastq.gz"
+        ],
+        "R2": [
+            "/MAESTRO/test/tutorial/data/time_data/CLL0_S1_L001_R2_001.fastq.gz"
+        ],
+        "R3": [
+            "/MAESTRO/test/tutorial/data/time_data/CLL0_S1_L001_R3_001.fastq.gz"
+        ]
+    },
+    "CLL24": {
+        "R1": [
+            "/MAESTRO/test/tutorial/data/time_data/CLL24_S1_L001_R1_001.fastq.gz"
+        ],
+        "R2": [
+            "/MAESTRO/test/tutorial/data/time_data/CLL24_S1_L001_R2_001.fastq.gz"
+        ],
+        "R3": [
+            "/MAESTRO/test/tutorial/data/time_data/CLL24_S1_L001_R3_001.fastq.gz"
+        ]
+    },
+    "CLL8": {
+        "R1": [
+            "/MAESTRO/test/tutorial/data/time_data/CLL8_S1_L001_R1_001.fastq.gz"
+        ],
+        "R2": [
+            "/MAESTRO/test/tutorial/data/time_data/CLL8_S1_L001_R2_001.fastq.gz"
+        ],
+        "R3": [
+            "/MAESTRO/test/tutorial/data/time_data/CLL8_S1_L001_R3_001.fastq.gz"
+        ]
+    },
+    "PBMC0": {
+        "R1": [
+            "/MAESTRO/test/tutorial/data/time_data/PBMC0_S1_L001_R1_001.fastq.gz"
+        ],
+        "R2": [
+            "/MAESTRO/test/tutorial/data/time_data/PBMC0_S1_L001_R2_001.fastq.gz"
+        ],
+        "R3": [
+            "/MAESTRO/test/tutorial/data/time_data/PBMC0_S1_L001_R3_001.fastq.gz"
+        ]
+    },
+    "PBMC24": {
+        "R1": [
+            "/MAESTRO/test/tutorial/data/time_data/PBMC24_S1_L001_R1_001.fastq.gz"
+        ],
+        "R2": [
+            "/MAESTRO/test/tutorial/data/time_data/PBMC24_S1_L001_R2_001.fastq.gz"
+        ],
+        "R3": [
+            "/MAESTRO/test/tutorial/data/time_data/PBMC24_S1_L001_R3_001.fastq.gz"
+        ]
+    },
+    "PBMC8": {
+        "R1": [
+            "/MAESTRO/test/tutorial/data/time_data/PBMC8_S1_L001_R1_001.fastq.gz"
+        ],
+        "R2": [
+            "/MAESTRO/test/tutorial/data/time_data/PBMC8_S1_L001_R2_001.fastq.gz"
+        ],
+        "R3": [
+            "/MAESTRO/test/tutorial/data/time_data/PBMC8_S1_L001_R3_001.fastq.gz"
+        ]
+    }
+}
+```
+
+### Step 3. Run snakemake pipeline
+Before running the workflow, please check the `config.yaml` and see if it is configured correctly. Once configured, users can use snakemake to run the workflow.
+
+```{bash, eval=FALSE}
+$ snakemake -np
+
+$ nohup snakemake --cores 32 > multi-scatac-chromap &
+##Instead of using nohup, submitting $ snakemake -j 16 by slurm is highly recommended.
+```
+
+### Step4. Final Outputs
+
+```{bash, eval=FALSE}
+$ ls Result
+Analysis  Benchmark  Log  Mapping  QC  Report
+
+$ ls Result/Analysis
+Batch  CLL0  CLL24  CLL8  Cluster  PBMC0  PBMC24  PBMC8
+```
+
+*  **Analysis/:** The Analysis directory contains a Seurat R object, as well as clustering result, cell type annotation result and driver transcription factor identification result. Specificly for the multi-sample scATAC-seq, we process a pseudo-bulk peak calling within each cluster and output the fragment files, narrow peak files, and bigwig files.
+    + Batch/: All samples merged Results.
+    + Cluster/: Fragment and bigwig files for each sample within each cluster.
+    
+*  **Benchmark/:** The Benchmark directory stores benchmark files for all rules in Snakefile, each of which contains a tab-separated table of run times and memory usage in MiB.
+*  **Log/:** The Log directory contains the log files generated in the pipeline analysis.
+*  **Mapping/:** The Mapping directory contains all the mapping results generated by chromap or minimap2.
+*  **QC/:** The QC directory contains quality control analysis results of scATAC-seq data, including the barcode filtering table outprefix_scATAC_validcells.txt, filtered count matrix outprefix_filtered_peak_count.h5 and other QC results. The filtered count matrix is generated according to singlecell.txt and the parameters like --count-cutoff and --frip-cutoff that users provide. 
+*  **Report/:** The html file in Report directory summarizes all the results in an HTML based document.

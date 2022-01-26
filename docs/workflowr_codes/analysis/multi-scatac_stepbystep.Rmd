@@ -1,0 +1,140 @@
+---
+title: "multi-sample scATAC-seq custom analysis"
+author: "Gali Bai"
+date: "2021-06-07"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+### About
+
+Custom analysis can be conducted using either MAESTRO or Seurat package. In this study, benchmarking experiments were designed to systematically test the effect of varying processing times on single-cell transcriptome and **epigenome profiles** from healthy and diseased donors. Peripheral blood mononuclear cells (PBMC) were isolated from healthy donors and from patients affected with chronic lymphocytic leukemia (CLL). Samples were either preserved immediately (0 h) or after 8 and 24 h.
+
+**Goal**: Evaluating the effect of sampling time on scATAC-seq chromatin accessibility profiles.
+
+### Load Required Libraries
+```{r, required-packages}
+library(Seurat)
+library(tidyr)
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(presto)
+```
+
+### Read Seurat object
+```{r, read-rds}
+all_samples_scATAC_Object <- readRDS("./data/multi-scatac/all_samples_scATAC_Object.rds")
+ATAC <- all_samples_scATAC_Object$ATAC
+ATAC
+DefaultAssay(ATAC) <- 'ATAC'
+ATAC[['ATAC']]
+```
+
+
+### Extract Sample Information
+```{r, extract-sample-information}
+df <- as.data.frame(do.call(rbind, strsplit(row.names(ATAC@meta.data), '@')))
+ATAC@meta.data[,c("sample", "hours", "cell")] <- df  %>% separate(V1,into = c("sample", "hours"), 
+                                                                  sep = "(?<=[A-Za-z])(?=[0-9])")
+head(ATAC@meta.data)
+```
+
+
+### Plot Umap on Default Parameters (Res=0.6)
+
+```{r, UMAP-plot_default}
+p1 <- DimPlot(ATAC, label = TRUE, reduction = "umap", group.by = "seurat_clusters", repel=T, pt.size = 0.3, label.size = 3) + labs(title = "Clustering of PBMCs from all samples")
+
+p2 <- DimPlot(ATAC, label = TRUE, reduction = "umap", group.by = "assign.ident", repel=T, pt.size = 0.3, label.size = 3) + labs(title = "Annotation of PBMCs from all samples")
+
+p3 <- DimPlot(ATAC, label = FALSE, reduction = "umap", group.by = "hours",repel=T, pt.size = 0.3, label.size = 2.5,cols = brewer.pal(3,"Dark2")) + labs(title = "Clustering of PBMCs in different time points")
+
+p4 <- DimPlot(ATAC, label = FALSE, reduction = "umap", group.by = "assign.ident",split.by = "hours",repel=T, pt.size = 0.3, label.size = 2.5,cols = brewer.pal(6,"Dark2")) + labs(title = "Clustering of PBMCs in different time points")
+
+p5 <- DimPlot(ATAC, label = FALSE, reduction = "umap", group.by = "assign.ident", split.by = "sample", repel=T, pt.size = 0.5, label.size = 2.5, cols = brewer.pal(6,"Dark2")) + labs(title = "Clustering of PBMCs for patients and normal")
+
+p1
+p2
+p3
+p4
+p5
+```
+
+**Conclusion:** From the above figures, we can easily observe similar results as described in the paper. A remarkable effect of the sampling time on single-cell epigenome profiles are lying across all blood cell subtypes from healthy donors and CLL patient samples.
+
+### Find Differencially Accessible Peaks
+
+**Between Cell Types**
+```{r, da-peaks-1}
+da_peaks <- wilcoxauc(ATAC, 'assign.ident', seurat_assay = 'ATAC', assay = 'data')
+##Use the 'data slots' under 'ATAC' peak assay
+head(da_peaks)
+
+top2_da_peaks <- top_markers(da_peaks, n = 2, auc_min = 0.5, pct_in_min = 10, pct_out_max = 10)
+
+Idents(ATAC) <- ATAC$assign.ident
+
+top2_cell_markers<- top2_da_peaks %>%
+  select(-rank) %>% 
+  unclass() %>% 
+  stack() %>%
+  pull(values) %>%
+  unique() %>%
+  .[!is.na(.)]
+
+
+DotPlot(object = ATAC, features = top2_cell_markers) + coord_flip()
+
+FeaturePlot(
+  object = ATAC,
+  features = top2_da_peaks$B[1],
+  pt.size = 0.1
+)
+```
+
+**Between Sampling Time**
+```{r, da-peaks-3}
+da_peaks_S <- wilcoxauc(ATAC, 'hours', seurat_assay = 'ATAC', assay = 'data')
+head(da_peaks_S)
+```
+
+
+**Between CLL and Healthy Donors**
+```{r, da-peaks-2}
+da_peaks_S <- wilcoxauc(ATAC, 'sample', seurat_assay = 'ATAC', assay = 'data')
+head(da_peaks_S)
+
+top2_da_peaks_S <- top_markers(da_peaks_S, n = 2, auc_min = 0.5, pct_in_min = 10, pct_out_max = 10)
+
+FeaturePlot(
+  object = ATAC,
+  features = top2_da_peaks_S$CLL[1],
+  pt.size = 0.1,
+  split.by = 'sample'
+)
+
+Idents(ATAC) <- ATAC$sample
+
+VlnPlot(
+  object = ATAC,
+  features = top2_da_peaks_S$CLL[1],
+  pt.size = 0.1,
+  idents = c("CLL", "PBMC")
+)
+
+FeaturePlot(
+  object = ATAC,
+  features = top2_da_peaks_S$CLL[1],
+  pt.size = 0.1
+)
+```
+
+### Pseudobulk Peak Calling and Genome Trackview
+
+After cell clustering, MAESTRO redo narrow peak calling on each cluster. Users can easily compare chromatin accessibility between samples within a certain cluster based on the bigwig file. Below shows a genome track of region chr2-20675900-20677733 in Cluster 0.
+
+```{r echo=FALSE}
+knitr::include_graphics("assets/GDF7_Cluster0_bed.png", error = FALSE)
+```

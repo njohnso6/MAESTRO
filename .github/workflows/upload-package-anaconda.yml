@@ -41,6 +41,7 @@ jobs:
         conda config --add channels liulab-dfci
         conda config --add channels bioconda
         conda config --add channels conda-forge
+        conda config --add channels macs3
         conda install -q mamba -c conda-forge
     - name: Build package
       run: |
