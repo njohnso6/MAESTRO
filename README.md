@@ -40,7 +40,7 @@ Seurat to Scanpy/Anndata.
 
 ## Documentation
 
-We are hosting MAESTRO documentation, instruction and tutorials at [MAESTRO Website](https://baigal628.github.io/MAESTRO_documentation/).
+We are hosting MAESTRO documentation, instruction and tutorials at [MAESTRO Website](https://macs3-project.github.io/MAESTRO/).
 
 ## Change Log
 
