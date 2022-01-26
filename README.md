@@ -107,6 +107,7 @@ We are hosting MAESTRO documentation, instruction and tutorials at [MAESTRO Webs
 * Update MAESTRO documentation to v1.5.1. Add snRNA-seq tutorials. Expand scRNA-seq tutorial with lisa2 TF prediction custom analysis. Add multi-scATAC-seq genome track plot for pseudobulk peaks. Explain multi-samples peak calling parameters.
 ### v1.5.2 (MACS3 fork)
 * Temporary release. We will update some documentations and update some dependencies.
+* The mouse chromosome length file for GRCm38 has been fixed. 
 
 ## System requirements
 * Linux/Unix
