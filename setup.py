@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Time-stamp: <2022-01-25 19:58:58 Tao Liu>
+# Time-stamp: <2022-01-26 13:49:23 Tao Liu>
 
 import sys,os
 # from distutils.core import setup
@@ -13,7 +13,7 @@ except ImportError:
 def main():
     setup(
         name = "MAESTRO",
-        version = "1.5.2",
+        version = "1.5.3",
         package_dir = {'MAESTRO':'MAESTRO'},
         packages = ['MAESTRO'],
         package_data={'MAESTRO':['Snakemake/scRNA/*', 'Snakemake/integrate/*', 'Snakemake/scATAC/*', 'Snakemake/scATAC/rules/*', 'Snakemake/scRNA/rules/*', 'R/*', 'utils/*','annotations/*', 'html/*', '']},

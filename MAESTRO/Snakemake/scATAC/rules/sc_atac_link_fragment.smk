@@ -3,7 +3,7 @@ if config["gzip"]:
 		input:
 			frag = lambda wildcards: FILES[wildcards.sample]
 		output:
-			frag_sort = temp("Result/Mapping/{sample}/fragments_sorted_corrected_dedup_count.tsv")
+			frag_sort = temp("Result/Mapping/{sample}/fragments_sorted_corrected_dedup_count.tsv"),
 			frag_dedup = "Result/Mapping/{sample}/fragments_corrected_dedup_count.tsv",
 			fraggz = "Result/Mapping/{sample}/fragments_corrected_dedup_count.tsv.gz"
 		shell:
@@ -17,7 +17,7 @@ else:
 		input:
 			frag = lambda wildcards: FILES[wildcards.sample]
 		output:
-			frag_sort = temp("Result/Mapping/{sample}/fragments_sorted_corrected_dedup_count.tsv")
+			frag_sort = temp("Result/Mapping/{sample}/fragments_sorted_corrected_dedup_count.tsv"),
 			frag_dedup = "Result/Mapping/{sample}/fragments_corrected_dedup_count.tsv",
 			fraggz = "Result/Mapping/{sample}/fragments_corrected_dedup_count.tsv.gz"
 		shell:
