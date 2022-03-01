@@ -2,9 +2,7 @@
 
 ![GitHub](https://img.shields.io/github/license/macs3-project/MAESTRO)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/macs3-project/MAESTRO)
-[![Conda](https://img.shields.io/conda/dn/macs3-project/maestro?label=Conda%20downloads)](https://anaconda.org/macs3-project/maestro)
-[![Docker Pulls](https://img.shields.io/docker/pulls/winterdongqing/maestro)](https://hub.docker.com/repository/docker/winterdongqing/maestro)
-[![Build Status](https://travis-ci.com/macs3-project/MAESTRO.svg?branch=master)](https://travis-ci.com/macs3-project/MAESTRO)
+[![Conda](https://img.shields.io/conda/dn/macs3/maestro?label=Conda%20downloads)](https://anaconda.org/macs3/maestro)
 
 
 **MAESTRO**(**M**odel-based **A**nalys**E**s of **S**ingle-cell
