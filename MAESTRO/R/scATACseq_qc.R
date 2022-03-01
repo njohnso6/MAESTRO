@@ -8,6 +8,9 @@ option_list = list(
   make_option(c("--outdir"), type = "character", default = "MAESTRO",
               action = "store", help = "The directory where the output files are stored."
   ),
+  make_option(c("--mapping"), type = "character", default = "chromap",
+              action = "store", help = "ALignment tool used for mapping"
+  ),
   make_option(c("--bulkstat"), type = "character", default = "",
               action = "store", help = "The result of samtools flagstat."
   ),
@@ -33,9 +36,10 @@ fragment_file = argue$fragment
 count_cutoff = argue$countcutoff
 frip_cutoff = argue$fripcutoff
 prefix = argue$prefix
+mapping = argue$mapping
 
 if(bulkstat_file != "") {
-  ATACReadDistrPlot(stat.filepath = bulkstat_file, name = prefix)
+  ATACReadDistrPlot(stat.filepath = bulkstat_file, name = prefix, mapping = mapping)
 }
 ATACFragmentSizePlot(filepath = fragment_file, name = prefix)
 ATACFilteringPlot(filepath = singlestat_file, name = prefix, 

@@ -82,6 +82,11 @@ We are hosting MAESTRO documentation, instruction and tutorials at [MAESTRO Webs
 * Support single-nuclei RNA-seq pipeline.
 * Fix bug in sample initiation subcommand to read fastq with sample id greater than 9.
 * Update MAESTRO documentation to v1.5.1. Add snRNA-seq tutorials. Expand scRNA-seq tutorial with lisa2 TF prediction custom analysis. Add multi-scATAC-seq genome track plot for pseudobulk peaks. Explain multi-samples peak calling parameters.
+### v1.5.2
+* Implement 10X single-cell multiome ATAC + Gene Expression data processing pipeline.
+* Optimize time and memory usage for generating scATAC-seq peak count matrix.
+* Add bulkQC plot for scATAC-seq pipeline when using chromap as the aligner.
+* Expand documentation with tutorial on multi-modality integration analysis and 
 
 ## System requirements
 * Linux/Unix
@@ -111,7 +116,7 @@ $ conda config --add channels bioconda
 $ conda config --add channels conda-forge
 # To make the installation faster, we recommend using mamba
 $ conda install mamba -c conda-forge
-$ mamba create -n MAESTRO maestro=1.5.1 -c liulab-dfci
+$ mamba create -n MAESTRO maestro=1.5.2 -c liulab-dfci
 # Activate the environment
 $ conda activate MAESTRO
 ```

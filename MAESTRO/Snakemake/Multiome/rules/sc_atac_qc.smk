@@ -3,13 +3,13 @@ _qcplot_threads = 4
 
 rule scatac_qcstat_mapped:
     input:
-        frag_count = "Result/Mapping/{sample}/fragments_corrected_dedup_count.tsv",
+        frag_count = "Result/ATAC/Mapping/fragments_corrected_dedup_count.tsv",
     output:
-        mapped_stat = temp("Result/QC/{sample}/singlecell_mapped.txt"),
+        mapped_stat = temp("Result/ATAC/QC/singlecell_mapped.txt"),
     params:
-        frag_count_sort = "Result/Mapping/{sample}/fragments_corrected_count_sortedbybarcode.tsv"
+        frag_count_sort = "Result/ATAC/Mapping/fragments_corrected_count_sortedbybarcode.tsv"
     benchmark:
-        "Result/Benchmark/{sample}_SingleQCMappability.benchmark"
+        "Result/Benchmark/%s_scATAC_SingleQCMappability.benchmark" %(config["outprefix"])
     shell:
         """
         sort -k4,4 -V {input.frag_count} > {params.frag_count_sort}
@@ -20,15 +20,15 @@ rule scatac_qcstat_mapped:
 
 rule scatac_qcstat_promoter:
     input:
-        frag_count = "Result/Mapping/{sample}/fragments_corrected_dedup_count.tsv",
+        frag_count = "Result/ATAC/Mapping/fragments_corrected_dedup_count.tsv",
         promoter = "%s/annotations/%s_promoter.bed" %(SCRIPT_PATH, config["species"])
     output:
-        promoter_stat = temp("Result/QC/{sample}/singlecell_promoter.txt"),
+        promoter_stat = temp("Result/ATAC/QC/singlecell_promoter.txt"),
     params:
-        frag_promoter = "Result/Mapping/{sample}/fragments_promoter.tsv",
-        frag_promoter_sort = "Result/Mapping/{sample}/fragments_promoter_sortbybarcode.tsv",
+        frag_promoter = "Result/ATAC/Mapping/fragments_promoter.tsv",
+        frag_promoter_sort = "Result/ATAC/Mapping/fragments_promoter_sortbybarcode.tsv",
     benchmark:
-        "Result/Benchmark/{sample}_SingleQCPromoter.benchmark"
+        "Result/Benchmark/%s_scATAC_SingleQCPromoter.benchmark" %(config["outprefix"])
     shell:
         """
         bedtools intersect -wa -a {input.frag_count} -b {input.promoter} -u > {params.frag_promoter}
@@ -41,15 +41,15 @@ rule scatac_qcstat_promoter:
 
 rule scatac_qcstat_singlecell:
     input:
-        mapped_stat = "Result/QC/{sample}/singlecell_mapped.txt",
-        promoter_stat = "Result/QC/{sample}/singlecell_promoter.txt",
+        mapped_stat = "Result/ATAC/QC/singlecell_mapped.txt",
+        promoter_stat = "Result/ATAC/QC/singlecell_promoter.txt",
     output:
-        single_stat = "Result/QC/{sample}/singlecell.txt"
+        single_stat = "Result/ATAC/QC/singlecell.txt"
     params:
-        mapped_stat_sort = "Result/QC/{sample}/singlecell_mapped_sortbybarcode.txt",
-        promoter_stat_sort = "Result/QC/{sample}/singlecell_promoter_sortbybarcode.txt"
+        mapped_stat_sort = "Result/ATAC/QC/singlecell_mapped_sortbybarcode.txt",
+        promoter_stat_sort = "Result/ATAC/QC/singlecell_promoter_sortbybarcode.txt"
     benchmark:
-        "Result/Benchmark/{sample}_SingleQCStat.benchmark"
+        "Result/Benchmark/%s_scATAC_SingleQCStat.benchmark" %(config["outprefix"])
     shell:
         """
         sort -k1,1 {input.mapped_stat} > {params.mapped_stat_sort}
@@ -63,17 +63,17 @@ rule scatac_qcstat_singlecell:
 if config["format"] == "fastq" and config["mapping"] == "minimap2":
     rule scatac_qcstat_bulk:
         input:
-            bam = "Result/Mapping/{sample}/{sample}.sortedByPos.rmdp.CBadded.bam",
+            bam = "Result/ATAC/Mapping/%s.sortedByPos.rmdp.CBadded.bam" %(config["outprefix"]),
             promoter = "%s/annotations/%s_promoter.bed" %(SCRIPT_PATH, config["species"]),
-            peak = "Result/Analysis/{sample}/{sample}_all_peaks.narrowPeak"
+            peak = "Result/ATAC/Analysis/%s_all_peaks.narrowPeak" %(config["outprefix"])
         output:
-            bulk_stat = "Result/QC/{sample}/flagstat.txt",
-            bam = "Result/Mapping/{sample}/{sample}.sortedByPos.rmdp.CBadded.unique.bam",
-            bed = "Result/Mapping/{sample}/{sample}.sortedByPos.rmdp.CBadded.unique.bed",
+            bulk_stat = "Result/ATAC/QC/flagstat.txt",
+            bam = "Result/ATAC/Mapping/%s.sortedByPos.rmdp.CBadded.unique.bam" %(config["outprefix"]),
+            bed = "Result/ATAC/Mapping/%s.sortedByPos.rmdp.CBadded.unique.bed" %(config["outprefix"]),
         threads:
             _samtools_thead
         benchmark:
-            "Result/Benchmark/{sample}_BulkQCStat.benchmark"
+            "Result/Benchmark/%s_scATAC_BulkQCStat.benchmark" %(config["outprefix"])
         shell:
             """
             samtools flagstat --threads {threads} {input.bam} > {output.bulk_stat}
@@ -88,17 +88,17 @@ if config["format"] == "fastq" and config["mapping"] == "minimap2":
 elif config["format"] == "fastq" and config["mapping"] == "chromap":
     rule scatac_qcstat_bulk:
         input:
-            frag_dedup = "Result/Mapping/{sample}/fragments_corrected_dedup_count.tsv",
+            frag_dedup = "Result/ATAC/Mapping/fragments_corrected_dedup_count.tsv",
             promoter = "%s/annotations/%s_promoter.bed" %(SCRIPT_PATH, config["species"]),
-            peak = "Result/Analysis/{sample}/{sample}_all_peaks.narrowPeak",
-            log = "Result/Log/{sample}_chromap.log"
+            peak = "Result/ATAC/Analysis/%s_all_peaks.narrowPeak" %(config["outprefix"]),
+            log = "Result/ATAC/Log/%s_chromap.log" %(config["outprefix"]),
         output:
-            bulk_stat = "Result/QC/{sample}/flagstat.txt",
-            fragbed = "Result/QC/{sample}/{sample}_frag.bed"
+            bulk_stat = "Result/ATAC/QC/flagstat.txt",
+            fragbed = "Result/ATAC/QC/%s_frag.bed" %(config["outprefix"])
         threads:
             _samtools_thead
         benchmark:
-            "Result/Benchmark/{sample}_BulkQCStat.benchmark"
+            "Result/Benchmark/%s_scATAC_BulkQCStat.benchmark" %(config["outprefix"])
         shell:
             """
             awk '{{print $3-$2}}' {input.frag_dedup} > {output.fragbed}
@@ -112,16 +112,16 @@ elif config["format"] == "fastq" and config["mapping"] == "chromap":
 elif config["format"] == "fragments":
     rule scatac_qcstat_bulk:
         input:
-            frag_dedup = "Result/Mapping/{sample}/fragments_corrected_dedup_count.tsv",
+            frag_dedup = "Result/ATAC/Mapping/fragments_corrected_dedup_count.tsv",
             promoter = "%s/annotations/%s_promoter.bed" %(SCRIPT_PATH, config["species"]),
-            peak = "Result/Analysis/{sample}/{sample}_all_peaks.narrowPeak"
+            peak = "Result/ATAC/Analysis/%s_all_peaks.narrowPeak" %(config["outprefix"]),
         output:
-            bulk_stat = "Result/QC/{sample}/flagstat.txt",
-            fragbed = "Result/QC/{sample}/{sample}_frag.bed"
+            bulk_stat = "Result/ATAC/QC/flagstat.txt",
+            fragbed = "Result/ATAC/QC/%s_frag.bed" %(config["outprefix"]),
         threads:
             _samtools_thead
         benchmark:
-            "Result/Benchmark/{sample}_BulkQCStat.benchmark"
+            "Result/Benchmark/%s_scATAC_BulkQCStat.benchmark" %(config["outprefix"])
         shell:
             """
             awk '{{print $3-$2}}' {input.frag_dedup} > {output.fragbed}
@@ -133,52 +133,51 @@ elif config["format"] == "fragments":
 if config["format"] == "fastq":
     rule scatac_qcplot:
         input:
-            fragbed = "Result/QC/{sample}/{sample}_frag.bed",
-            single_stat = "Result/QC/{sample}/singlecell.txt",
-            bulk_stat = "Result/QC/{sample}/flagstat.txt"
+            fragbed = "Result/ATAC/QC/%s_frag.bed" %(config["outprefix"]),
+            single_stat = "Result/ATAC/QC/singlecell.txt",
+            bulk_stat = "Result/ATAC/QC/flagstat.txt"
         output:
-            readdistr = "Result/QC/{sample}/{sample}_scATAC_read_distr.png",
-            qcfrag = "Result/QC/{sample}/{sample}_scATAC_fragment_size.png",
-            qcfrip = "Result/QC/{sample}/{sample}_scATAC_cell_filtering.png",
-            validbarcode = "Result/QC/{sample}/{sample}_scATAC_validcells.txt"
+            readdistr = "Result/ATAC/QC/%s_scATAC_read_distr.png" %(config["outprefix"]),
+            qcfrag = "Result/ATAC/QC/%s_scATAC_fragment_size.png" %(config["outprefix"]),
+            qcfrip = "Result/ATAC/QC/%s_scATAC_cell_filtering.png" %(config["outprefix"]),
+            validbarcode = "Result/ATAC/QC/%s_scATAC_validcells.txt" %(config["outprefix"]),
         params:
-            outdir = "Result/QC/{sample}",
-            outpre = "{sample}",
-            fragbed = "{sample}_frag.bed",
+            outdir = "Result/ATAC/QC/",
+            outpre = config["outprefix"],
+            fragbed = "%s_frag.bed" %(config["outprefix"]),
             single_stat = "singlecell.txt",
             bulk_stat = "flagstat.txt",
-            counts = config["cutoff"]["count"],
-            frip = config["cutoff"]["frip"],
+            counts = config["cutoff"]["atac_count"],
+            frip = config["cutoff"]["atac_frip"],
             mapping = config["mapping"],
         threads:
             _qcplot_threads
         benchmark:
-            "Result/Benchmark/{sample}_QCPlot.benchmark"
+            "Result/Benchmark/%s_scATAC_QCPlot.benchmark" %(config["outprefix"])
         shell:
-            "Rscript " + RSCRIPT_PATH + "/scATACseq_qc.R --bulkstat {params.bulk_stat} --fragment {params.fragbed} --mapping {params.mapping}  --singlestat {params.single_stat} "
+            "Rscript " + RSCRIPT_PATH + "/scATACseq_qc.R --bulkstat {params.bulk_stat} --fragment {params.fragbed} --mapping {params.mapping} --singlestat {params.single_stat} "
             "--countcutoff {params.counts} --fripcutoff {params.frip} --prefix {params.outpre} --outdir {params.outdir}"
-
 
 elif config["format"] == "fragments":
     rule scatac_qcplot:
         input:
-            fragbed = "Result/QC/{sample}/{sample}_frag.bed",
-            single_stat = "Result/QC/{sample}/singlecell.txt"
+            fragbed = "Result/ATAC/QC/%s_frag.bed" %(config["outprefix"]),
+            single_stat = "Result/ATAC/QC/singlecell.txt",
         output:
-            qcfrag = "Result/QC/{sample}/{sample}_scATAC_fragment_size.png",
-            qcfrip = "Result/QC/{sample}/{sample}_scATAC_cell_filtering.png",
-            validbarcode = "Result/QC/{sample}/{sample}_scATAC_validcells.txt"
+            qcfrag = "Result/ATAC/QC/%s_scATAC_fragment_size.png" %(config["outprefix"]),
+            qcfrip = "Result/ATAC/QC/%s_scATAC_cell_filtering.png" %(config["outprefix"]),
+            validbarcode = "Result/ATAC/QC/%s_scATAC_validcells.txt" %(config["outprefix"]),
         params:
-            outdir = "Result/QC/{sample}",
-            outpre = "{sample}",
-            fragbed = "{sample}_frag.bed",
+            outdir = "Result/ATAC/QC/",
+            outpre = config["outprefix"],
+            fragbed = "%s_frag.bed" %(config["outprefix"]),
             single_stat = "singlecell.txt",
             counts = config["cutoff"]["count"],
             frip = config["cutoff"]["frip"]
         threads:
             _qcplot_threads
         benchmark:
-            "Result/Benchmark/{sample}_QCPlot.benchmark"
+            "Result/Benchmark/%s_scATAC_QCPlot.benchmark" %(config["outprefix"]),
         shell:
             "Rscript " + RSCRIPT_PATH + "/scATACseq_qc.R --fragment {params.fragbed} --singlestat {params.single_stat} "
             "--countcutoff {params.counts} --fripcutoff {params.frip} --prefix {params.outpre} --outdir {params.outdir}"

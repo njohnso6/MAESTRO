@@ -42,6 +42,7 @@ rule scatac_countpeak_batch:
     output:
         counts = "Result/Analysis/Batch/{sample}/{sample}_peak_count.h5"
     params:
+        peakcount = temp("Result/Analysis/{sample}/{sample}_sorted_peakcount.tsv"),
         species = config["species"],
         outdir = "Result/Analysis/Batch/{sample}",
         outpre = "{sample}"
@@ -51,6 +52,6 @@ rule scatac_countpeak_batch:
         "Result/Benchmark/{sample}_PeakCount_batch.benchmark"
     shell:
         """
-        MAESTRO scatac-peakcount --binary --peak {input.finalpeak} --fragment {input.frag} --barcode {input.validbarcode} \
-        --species {params.species} --cores {threads} --directory {params.outdir} --outprefix {params.outpre}
+        LC_ALL=C fgrep -f {input.validbarcode} -w {input.frag} | bedtools intersect -sorted -wa -wb -a {input.finalpeak} -b - | sort -k1,1 -k2,2 -k3,3 -k7,7 - | bedtools groupby -g 1,2,3,7 -c 7 -o count > {params.peakcount};
+        MAESTRO scatac-peakcount --binary --filtered_count {params.peakcount} --species {params.species} --directory {params.outdir} --outprefix {params.outpre}
         """
