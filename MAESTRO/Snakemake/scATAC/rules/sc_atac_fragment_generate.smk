@@ -28,7 +28,7 @@ else:
         benchmark:
             "Result/Benchmark/{sample}_BarcodeCorrect.benchmark"
         shell:
-            "python " + SCRIPT_PATH + "/scATAC_10x_BarcodeCorrect.py -b {input.r2} -O {params.outdir};"           
+            "python " + SCRIPT_PATH + "/scATAC_10x_BarcodeCorrect.py -b {input.r2} -O {params.outdir};"
             "sort -k1,1 -k3,3 {output.bc_correct} | uniq > {output.bc_correct_uniq}"
 
 
@@ -47,5 +47,5 @@ rule scatac_fragmentcorrect:
     shell:
         "python " + SCRIPT_PATH + "/scATAC_FragmentCorrect.py -F {input.fragments} -C {input.bc_correct} -O {params.outdir};"
         "sort -k1,1 -k2,2 -k3,3 -k4,4 -V {params.frag_correct} > {output.frag_sort};"
-        "bedtools groupby -i {output.frag_sort} -g 1,2,3,4 -c 4 -o count > {output.frag_count};"
+        "bedtools groupby -i {output.frag_sort} -g 1,2,3,4 -c 4 -o count | sort -k1,1 -k2,2n > {output.frag_count};"
         "rm {params.frag_correct}"
