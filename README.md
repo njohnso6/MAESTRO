@@ -1,10 +1,10 @@
 # MAESTRO (MACS3 fork version)
 
+
 ![GitHub](https://img.shields.io/github/license/macs3-project/MAESTRO)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/macs3-project/MAESTRO)
-[![Conda](https://img.shields.io/conda/dn/macs3-project/maestro?label=Conda%20downloads)](https://anaconda.org/macs3-project/maestro)
-[![Docker Pulls](https://img.shields.io/docker/pulls/winterdongqing/maestro)](https://hub.docker.com/repository/docker/winterdongqing/maestro)
-[![Build Status](https://travis-ci.com/macs3-project/MAESTRO.svg?branch=master)](https://travis-ci.com/macs3-project/MAESTRO)
+[![Conda](https://img.shields.io/conda/dn/macs3/maestro?label=Conda%20downloads)](https://anaconda.org/macs3/maestro)
+
 
 
 **MAESTRO**(**M**odel-based **A**nalys**E**s of **S**ingle-cell
@@ -28,9 +28,11 @@
   [sci-ATAC-seq](https://science.sciencemag.org/content/348/6237/910)
   for scATAC-seq protocols.
 
-This is the MACS3 project fork of MAESTRO. The long-term goal is to
-switch to all python implementation of scRNA+scATAC analysis and move
-from Seurat to Scanpy/Anndata.
+This is the MACS3 project fork of MAESTRO. We will maintain the
+MAESTRO pacakge here and send PR to the original repository at
+liulab-dfci/MAESTRO. The long-term goal in this fork is to switch to
+all python implementation of scRNA+scATAC analysis and move from
+Seurat to Scanpy/Anndata.
 
 <p align="center">
 <img src="./image/MAESTRO_workflow.png"/>
@@ -38,7 +40,7 @@ from Seurat to Scanpy/Anndata.
 
 ## Documentation
 
-We are hosting MAESTRO documentation, instruction and tutorials at [MAESTRO Website](https://baigal628.github.io/MAESTRO_documentation/).
+We are hosting MAESTRO documentation, instruction and tutorials at [MAESTRO Website](https://macs3-project.github.io/MAESTRO/).
 
 ## Change Log
 
@@ -105,7 +107,6 @@ We are hosting MAESTRO documentation, instruction and tutorials at [MAESTRO Webs
 * Support single-nuclei RNA-seq pipeline.
 * Fix bug in sample initiation subcommand to read fastq with sample id greater than 9.
 * Update MAESTRO documentation to v1.5.1. Add snRNA-seq tutorials. Expand scRNA-seq tutorial with lisa2 TF prediction custom analysis. Add multi-scATAC-seq genome track plot for pseudobulk peaks. Explain multi-samples peak calling parameters.
-
 ### v1.5.4 (MACS3 fork)
 * Temporary release. We will update some documentations and update some dependencies.
 * The mouse chromosome length file for GRCm38 has been fixed. 
@@ -113,7 +114,6 @@ We are hosting MAESTRO documentation, instruction and tutorials at [MAESTRO Webs
 * Optimize time and memory usage for generating scATAC-seq peak count matrix. (Gali)
 * Add bulkQC plot for scATAC-seq pipeline when using chromap as the aligner. (Gali)
 * Expand documentation with tutorial on multi-modality integration analysis and ... (Gali)
-
 
 ## System requirements
 * Linux/Unix
@@ -143,7 +143,8 @@ $ conda config --add channels bioconda
 $ conda config --add channels conda-forge
 # To make the installation faster, we recommend using mamba
 $ conda install mamba -c conda-forge
-$ mamba create -n MAESTRO maestro=1.5.4 -c macs3-project
+$ mamba create -n MAESTRO maestro=1.5.4 -c macs3
+
 # Activate the environment
 $ conda activate MAESTRO
 ```
