@@ -6,11 +6,12 @@
 # @Author: Dongqing Sun
 # @E-mail: Dongqingsun96@gmail.com
 # @Date:   2021-06-07 11:11:58
-# @Last Modified by:   Gali Bai, Dongqing Sun
+# @Last Modified by: Gali Bai, Dongqing Sun
 # @Last Modified time: 2021-06-07 11:11:58
 # END of old header
 
-version = "1.5.3"
+version = "1.5.4"
+
 
 import logging
 import sys, os
@@ -21,11 +22,14 @@ from MAESTRO.MAESTRO_PipeInit import *
 from MAESTRO.MAESTRO_ParameterValidate import *
 from MAESTRO.scATAC_H5Process import *
 from MAESTRO.scATAC_Genescore import genescore_parser, genescore
-from MAESTRO.scATAC_10x_PeakCount import peakcount_parser, peakcount
+from MAESTRO.scATAC_10x_PeakCount import peakcount_parser, peak_count_matrix
 from MAESTRO.scRNA_QC import scrnaqc_parser, scrna_qc
 from MAESTRO.scATAC_QC import scatacqc_parser, scatac_qc
 from MAESTRO.scRNA_AnalysisPipeline import scrna_analysis_parser, scrna_analysis
 from MAESTRO.sample2json import *
+from MAESTRO.Multiome_QC import *
+
+
 
 def main():
     """
@@ -39,6 +43,7 @@ def main():
     scatac_parser(subparsers)
     scrna_parser(subparsers)
     integrate_parser(subparsers)
+    multiome_parser(subparsers)
 
     sample_parser(subparsers)
     mtxtoh5_parser(subparsers)
@@ -52,6 +57,7 @@ def main():
 
     scrnaqc_parser(subparsers)
     scatacqc_parser(subparsers)
+    multiomeqc_parser(subparsers)
 
     scrna_analysis_parser(subparsers)
 
@@ -65,13 +71,17 @@ def main():
     elif args.subcommand == "samples-init":
         sample_json(args)
 
+    elif args.subcommand == "scrna-init":
+        scrna_validator(args)
+        scrna_config(args)
+
     elif args.subcommand == "scatac-init":
         scatac_validator(args)
         scatac_config(args)
 
-    elif args.subcommand == "scrna-init":
-        scrna_validator(args)
-        scrna_config(args)
+    elif args.subcommand == "multiome-init":
+      multiome_validator(args)
+      multiome_config(args)
 
     elif args.subcommand == "integrate-init":
         integrate_config(args)
@@ -92,7 +102,7 @@ def main():
         merge_10X_h5(directory = args.directory, outprefix = args.outprefix, h5list = args.h5_list, prefixlist = args.cellprefix_list, genome = args.species, datatype = args.datatype)
 
     elif args.subcommand == "scatac-peakcount":
-        peakcount(directory = args.directory, outprefix = args.outprefix, peak = args.peak, fragment = args.fragment, barcode = args.barcode, binary = args.binary, count_cutoff = args.count_cutoff, cores = args.cores, species = args.species)
+        peak_count_matrix(filtered_count = args.filtered_count, directory = args.directory, outprefix = args.outprefix, binary = args.binary, species = args.species)
 
     elif args.subcommand == "scatac-genescore":
         genescore(directory = args.directory, outprefix = args.outprefix, fileformat = args.format, peakcount = args.peakcount, feature = args.feature, barcode = args.barcode, genedistance = args.genedistance, species = args.species, model = args.model)
@@ -103,8 +113,12 @@ def main():
     elif args.subcommand == "scatac-qc":
         scatac_qc(directory = args.directory, outprefix = args.outprefix, fileformat = args.format, peakcount = args.peakcount, feature = args.feature, barcode = args.barcode, single_stat = args.single_stat, peak_cutoff = args.peak_cutoff, count_cutoff = args.count_cutoff, frip_cutoff = args.frip_cutoff, cell_cutoff = args.cell_cutoff, species = args.species)
 
+    elif args.subcommand == "multiome-qc":
+        multiome_qc(directory = args.directory, outprefix = args.outprefix, fileformat = args.format, peakcount = args.peakcount, genecount = args.genecount, atac_qc = args.atac_qc, rna_qc = args.rna_qc, atac_feature = args.atac_feature, atac_barcode = args.atac_barcode, rna_feature = args.rna_feature, gene_column = args.gene_column, rna_barcode = args.rna_barcode, species = args.species)
+
     elif args.subcommand == "scrna-analysis":
         scrna_analysis(directory = args.directory, outprefix = args.outprefix, fileformat = args.format, matrix = args.matrix, separator = args.separator, feature = args.feature, gene_column = args.gene_column, gene_idtype = args.gene_idtype, barcode = args.barcode, meta_file = args.meta_file, meta_sep = args.meta_sep, meta_cell = args.meta_cell, count_cutoff = args.count_cutoff, gene_cutoff = args.gene_cutoff, cell_cutoff = args.cell_cutoff, assembly = args.assembly)
+
     else:
         parser.print_help()
         exit(1)

@@ -102,7 +102,7 @@ def main():
             td_list.append(items_str)
     td_str = "\n".join(td_list)
 
-    if input_format != "fragments" and mapping != "chromap":
+    if input_format != "fragments":
         if input_format == "fastq":
             inputformat = "FASTQ Path"
         else:
