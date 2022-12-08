@@ -16,7 +16,7 @@ def main():
         version = "1.5.4",
         package_dir = {'MAESTRO':'MAESTRO'},
         packages = ['MAESTRO'],
-        package_data={'MAESTRO':['Snakemake/scRNA/*', 'Snakemake/integrate/*', 'Snakemake/scATAC/*', 'Snakemake/scATAC/rules/*', 'Snakemake/scRNA/rules/*', 'R/*', 'utils/*','annotations/*', 'html/*', '']},
+        package_data={'MAESTRO':['Snakemake/Multiome/*', 'Snakemake/scRNA/*', 'Snakemake/integrate/*', 'Snakemake/scATAC/*', 'Snakemake/scATAC/rules/*', 'Snakemake/scRNA/rules/*', 'R/*', 'utils/*','annotations/*', 'html/*', '']},
         #data_files = [(os.path.join(sys.prefix,'bin'), ['refpkg/giggle/bin/giggle'])],
         scripts = ['MAESTRO/MAESTRO'],
         include_package_data = True,
