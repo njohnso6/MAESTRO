@@ -55,6 +55,7 @@ rule STARsolo:
             --readFilesIn {params.transcript} {params.barcode} \
 			--readFilesCommand zcat \
             --genomeSAindexNbases 2 \
+            --limitOutSJcollapsed 5000000 \
             > {log} 2>&1
 
         samtools index -b -@ {threads} {output.bam} >> {log} 2>&1

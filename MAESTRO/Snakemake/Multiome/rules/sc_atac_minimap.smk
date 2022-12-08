@@ -28,7 +28,7 @@ rule scatac_fragmentgenerate:
         fragments = "Result/ATAC/Mapping/fragments.tsv",
         bam = "Result/ATAC/Mapping/%s.sortedByPos.CRadded.bam" %(config["outprefix"]),
     params:
-        outdir = "Result/ATAC/Mapping/
+        outdir = "Result/ATAC/Mapping/"
     benchmark:
         "Result/Benchmark/%s_scATAC_FragGenerate.benchmark" %(config["outprefix"])
     shell:
@@ -63,7 +63,7 @@ rule scatac_bamaddCB:
         output:
             bam = "Result/ATAC/Mapping/%s.sortedByPos.rmdp.CBadded.bam" %(config["outprefix"])
         params:
-            outdir = "Result/ATAC/Mapping/,
+            outdir = "Result/ATAC/Mapping/",
             outprefix = "%s.sortedByPos.rmdp.CBadded" %(config["outprefix"])
         threads:
             _bamAddCB_threads

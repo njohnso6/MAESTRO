@@ -48,8 +48,8 @@ rule scatac_fqaddbarcode:
         r2 = "Result/ATAC/Tmp/%s_R2.fastq" %(config["outprefix"]),
         r3 = "Result/ATAC/Tmp/%s_R3.fastq" %(config["outprefix"]),
     output:
-        r1 = temp("Result/ATAC/Tmp/%s_R1.barcoded.fastq" %(config["outprefix"]),
-        r3 = temp("Result/ATAC/Tmp/%s_R3.barcoded.fastq" %(config["outprefix"]),
+        r1 = temp("Result/ATAC/Tmp/%s_R1.barcoded.fastq" %(config["outprefix"])),
+        r3 = temp("Result/ATAC/Tmp/%s_R3.barcoded.fastq" %(config["outprefix"])),
     benchmark:
         "Result/Benchmark/%s_scATAC_FqAddbarcode.benchmark" %(config["outprefix"])
     shell:

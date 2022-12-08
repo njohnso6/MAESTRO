@@ -31,7 +31,7 @@ else:
 if config["mapping"] == "minimap2":
     include: "rules/sc_atac_minimap_preprocess.smk"
     include: "rules/sc_atac_minimap.smk"
-    include: "rules/sc_atac_fragment_correct.smk"
+    include: "rules/sc_atac_fragment_generate.smk"
     include: "rules/sc_atac_dedup.smk"
 elif config["mapping"] == "chromap":
     include: "rules/sc_atac_chromap_preprocess.smk"
